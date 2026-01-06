@@ -16,6 +16,13 @@ def render_world(world):
     for entity in world.entities:
         grid[entity.y][entity.x] = entity.symbol()
 
+    for settlement in world.history.settlements.values():
+        cx, cy = settlement.key
+        x = cx * 3 + 1
+        y = cy * 3 + 1
+
+        if 0 <= x < world.width and 0 <= y < world.height:
+            grid[y][x] = settlement.symbol()
     events = list(world.event_log.events)
 
     for y in range(world.height):

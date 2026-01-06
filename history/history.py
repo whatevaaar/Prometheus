@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from history.settlement import Settlement
+
 
 class History:
     def __init__(self):
@@ -54,4 +56,4 @@ class History:
         return key in self.settlements
 
     def register_settlement(self, key, name, age):
-        self.settlements[key] = {"name": name, "born": age, }
+        self.settlements[key] = Settlement(key, name, age)
