@@ -1,0 +1,30 @@
+# --- TIEMPO ---
+TICK_TIME = 0.2
+
+# --- VIDA ---
+MIN_ENERGY = 20
+MAX_ENERGY = 35
+MIN_AGE = 0
+MIN_REPRO_AGE = 16
+MIN_REPRO_ENERGY = 14
+MAX_AGE_MIN = 80
+MAX_AGE_MAX = 130
+
+# Energy
+REST_ENERGY_DECAY = 0.15
+MOVE_ENERGY_DECAY = 0.4
+
+# --- REPRODUCCIÓN ---
+REPRO_CHANCE = 0.15  # bajar
+REPRO_COST = 6  # subir
+
+# --- POBLACIÓN ---
+INITIAL_POP = 6
+SOFT_POP_CAP = 30  # después baja la reproducción
+ENERGY_DECAY = 0.4  # en vez de 1 por tick
+
+# --- SÍMBOLOS ---
+SYMBOL_YOUNG = "o"
+SYMBOL_ADULT = "O"
+SYMBOL_OLD = "0"
+SYMBOL_SETTLED = "▲"
