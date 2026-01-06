@@ -1,5 +1,7 @@
 import sys
 
+from events.event_log import event_log
+
 
 def trim(text, width):
     return text[:width].ljust(width)
@@ -11,7 +13,7 @@ def render_world(world):
     panel_width = 52
     separator = " │ "
 
-    grid = [[tile.char() for tile in row] for row in world.tiles]
+    grid = [[world.tiles[y][x].char(world, x, y) for x in range(world.width)] for y in range(world.height)]
 
     for entity in world.entities:
         grid[entity.y][entity.x] = entity.symbol()
@@ -23,7 +25,7 @@ def render_world(world):
 
         if 0 <= x < world.width and 0 <= y < world.height:
             grid[y][x] = settlement.symbol()
-    events = list(world.event_log.events)
+    events = list(event_log.events)
 
     for y in range(world.height):
         map_line = "".join(grid[y])
