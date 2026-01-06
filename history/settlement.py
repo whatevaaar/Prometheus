@@ -2,12 +2,25 @@ import random
 
 from history.identity import generate_identity
 
+ANSI_COLORS = ["\033[38;5;33m",  # azul
+               "\033[38;5;34m",  # verde
+               "\033[38;5;160m",  # rojo
+               "\033[38;5;220m",  # amarillo
+               "\033[38;5;141m",  # púrpura
+               "\033[38;5;208m",  # naranja
+               ]
+
+RESET = "\033[0m"
+
 
 class Settlement:
     def __init__(self, key, name, born):
         self.key = key
         self.name = name
         self.born = born
+
+        self.color = random.choice(ANSI_COLORS)
+        self.glyph = random.choice(["▲", "▴", "◆", "■", "⬟"])
 
         self.population = 0
         self.food = 10.0
@@ -45,8 +58,4 @@ class Settlement:
             self.stability += 0.001
 
     def symbol(self):
-        if self.population < 5:
-            return "▲"
-        if self.population < 12:
-            return "▣"
-        return "⌂"
+        return f"{self.color}{self.glyph}{RESET}"

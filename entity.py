@@ -7,7 +7,7 @@ from world.tile_type import TileType
 
 class Entity:
     __slots__ = ("x", "y", "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown",
-                 "social_satiation")
+                 "social_satiation", "settlement")
 
     def __init__(self, x, y):
         self.x = x
@@ -21,6 +21,7 @@ class Entity:
 
         self.settled = False
         self.settle_timer = 0
+        self.settlement = None
 
         self.move_cooldown = 0
         self.social_satiation = 0.0
@@ -29,12 +30,13 @@ class Entity:
     # Representación
     # ──────────────────────────────
     def symbol(self):
+        if self.settlement:
+            return self.settlement.color + self.settlement.glyph + "\033[0m"
+
         if self.age < 10:
             return "o"
         elif self.age < self.max_age * 0.7:
             return "O"
-        elif self.settled:
-            return "▲"
         else:
             return "Ω"
 

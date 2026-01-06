@@ -95,18 +95,30 @@ class World:
                 self.event_log.add("La vida se multiplica sin control…")
 
     def detect_settlements(self):
-        for key, members in self.entity_grid.items():
-            if len(members) >= config.SETTLEMENT_MIN_MEMBERS:
-                if not self.history.has_settlement(key):
-                    name = generate_name()
-                    self.history.register_settlement(key, name, self.age)
-                    self.event_log.add(f"{name} ha echado raíces ▲")
+        clusters = {}
 
-                settlement = self.history.settlements[key]
-                settlement.population = len(members)
+        for e in self.entities:
+            if not e.settled:
+                continue
 
-                for e in members:
-                    e.settled = True
+            key = (e.x // 3, e.y // 3)
+            clusters.setdefault(key, []).append(e)
+
+        for key, members in clusters.items():
+            if len(members) < config.SETTLEMENT_MIN_MEMBERS:
+                continue
+
+            if not self.history.has_settlement(key):
+                name = generate_name()
+                self.history.register_settlement(key, name, self.age)
+                self.event_log.add(f"{name} ha echado raíces {self.history.settlements[key].glyph}")
+
+            settlement = self.history.settlements[key]
+            settlement.population = len(members)
+
+            # 🔥 cachear settlement en la entidad
+            for e in members:
+                e.settlement = settlement
 
     def detect_conflicts(self):
         settlements = list(self.history.settlements.values())
@@ -146,4 +158,3 @@ class World:
     def get_settlement_at(self, x, y):
         key = (x // 3, y // 3)
         return self.history.settlements.get(key)
-

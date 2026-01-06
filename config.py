@@ -15,7 +15,7 @@ REST_ENERGY_DECAY = 0.15
 MOVE_ENERGY_DECAY = 0.4
 
 # --- REPRODUCCIÓN ---
-REPRO_CHANCE = 0.15  # bajar
+REPRO_CHANCE = 0.05  # bajar
 REPRO_COST = 6  # subir
 
 # --- POBLACIÓN ---
