@@ -1,37 +1,33 @@
 import random
-
-TEMPERAMENTS = [
-    "aggressive",
-    "peaceful",
-    "spiritual",
-    "nomadic",
-    "proud",
-]
-
-VALUES = [
-    "honor",
-    "strength",
-    "memory",
-    "expansion",
-    "isolation",
-]
-
-MYTHS = [
-    "nacieron del polvo",
-    "fueron elegidos por las piedras",
-    "sobrevivieron al gran silencio",
-    "brotaron tras la primera muerte",
-    "despertaron bajo un cielo roto",
-]
+from enum import Enum, auto
 
 
-def generate_identity(name):
-    temperament = random.choice(TEMPERAMENTS)
-    value = random.choice(VALUES)
-    myth = random.choice(MYTHS)
+class Temperament(Enum):
+    AGGRESSIVE = auto()
+    PEACEFUL = auto()
+    SPIRITUAL = auto()
+    NOMADIC = auto()
+    PROUD = auto()
 
-    return {
-        "temperament": temperament,
-        "core_value": value,
-        "myth": f"{name} {myth}",
-    }
+
+class ValueType(Enum):
+    HONOR = auto()
+    STRENGTH = auto()
+    MEMORY = auto()
+    EXPANSION = auto()
+    ISOLATION = auto()
+
+
+class MythType(Enum):
+    DUST = "nacieron del polvo"
+    STONES = "fueron elegidos por las piedras"
+    SILENCE = "sobrevivieron al gran silencio"
+    FIRST_DEATH = "brotaron tras la primera muerte"
+    BROKEN_SKY = "despertaron bajo un cielo roto"
+
+
+class Identity:
+    def __init__(self):
+        self.temperament: Temperament = random.choice(tuple(Temperament))
+        self.value: ValueType = random.choice(tuple(ValueType))
+        self.myth: MythType = random.choice(tuple(MythType))

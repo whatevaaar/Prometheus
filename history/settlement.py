@@ -2,7 +2,7 @@ import random
 
 from entity.entity import Entity
 from events.event_log import event_log
-from history.identity import generate_identity
+from history.identity import Identity, Temperament, ValueType
 from world.tile_type import TileType
 
 ANSI_COLORS = ["\033[38;5;33m",  # azul
@@ -28,11 +28,12 @@ class Settlement:
         self.population = 0
         self.food = 10.0
         self.stability = 1.0
+        self.fight_bonus = 0
 
         self.territory = set()  # (x, y)
 
         # identidad
-        self.identity = generate_identity(name)
+        self.identity = Identity()
 
         # reproducción
         self.birth_timer = 0.0
@@ -57,16 +58,18 @@ class Settlement:
                 world.spawn(Entity(x, y, settlement=self, settled=True))
 
         # identidad afecta estabilidad
-        if self.identity["temperament"] == "aggressive":
+        if self.identity.temperament == Temperament.AGGRESSIVE:
             self.stability -= 0.002
-        elif self.identity["temperament"] == "spiritual":
+        elif self.identity.temperament == Temperament.SPIRITUAL:
             self.stability += 0.001
 
         if random.random() < 0.001:
-            if self.identity["temperament"] == "spiritual":
+            if self.identity.temperament == Temperament.SPIRITUAL:
                 event_log.add(f"{self.name} celebra un rito antiguo 🕯️")
-            elif self.identity["temperament"] == "aggressive":
+                self.fight_bonus += .1
+            elif self.identity.temperament == Temperament.AGGRESSIVE:
                 event_log.add(f"{self.name} entrena para la guerra ⚔️")
+            self.fight_bonus += .5
         self.expand_territory(world)
 
     def symbol(self):
@@ -90,16 +93,23 @@ class Settlement:
     def ideology_score(self) -> float:
         score = 0
 
-        if self.identity["temperament"] == "aggressive":
+        if self.identity.temperament == Temperament.AGGRESSIVE:
             score += 0.6
-        if self.identity["core_value"] == "expansion":
+        if self.identity.value == ValueType.EXPANSION:
             score += 0.4
-        if self.identity["temperament"] == "peaceful":
+        if self.identity.temperament == Temperament.PEACEFUL:
             score -= 0.3
 
         return score
 
-    def war_score
+    @property
+    def war_score(self) -> float:
+        score = 0
+
+        if self.identity.temperament == Temperament.AGGRESSIVE:
+            score += 0.2
+
+        return self.population + score + self.fight_bonus
 
     def is_neighbor(self, other) -> bool:
         ax, ay = self.key
@@ -123,5 +133,17 @@ class Settlement:
                     e.settlement = None
 
                 self.stability -= 0.1
-                world.event_log.add(f"{self.name} pierde territorio ⚠️")
+                event_log.add(f"{self.name} pierde territorio ⚠️")
                 return
+
+    def war_advantage_against(self, other):
+        """
+        Devuelve un número entre 0 y 1
+        0.5 = fuerzas parejas
+        >0.5 = ventaja
+        <0.5 = desventaja
+        """
+        diff = self.war_score - other.war_score
+
+        # suaviza para que no explote
+        return 0.5 + max(min(diff * 0.1, 0.4), -0.4)

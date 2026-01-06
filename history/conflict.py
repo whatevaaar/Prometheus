@@ -1,6 +1,7 @@
-from enum import Enum
 import random
+from enum import Enum
 
+import config
 from history.settlement import Settlement
 
 
@@ -29,6 +30,14 @@ class Conflict:
             self.apply_war(world)
 
     def apply_war(self, world):
-        # daño territorial ligero
-        if random.random() < 0.05:
-            self.b.lose_border_tile(world)
+        a = self.a
+        b = self.b
+
+        a_adv = a.war_advantage_against(b)
+        b_adv = 1.0 - a_adv
+
+        if random.random() < config.BASE_HIT * a_adv:
+            b.lose_border_tile(world)
+
+        if random.random() < config.BASE_HIT * b_adv:
+            a.lose_border_tile(world)
