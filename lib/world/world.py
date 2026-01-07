@@ -1,14 +1,16 @@
 import random
 from collections import defaultdict
+from typing import Optional
 
 import config
-from entity.entity import Entity
-from events.event_log import event_log
-from history.history import History
-from history.settlement import Settlement
-from naming.name_generator import generate_name
-from world.tile import Tile
-from world.tile_type import TileType
+from geometry.point.point import Point
+from lib.entity.entity import Entity
+from lib.events.event_log import event_log
+from lib.history.history import History
+from lib.settlement.settlement import Settlement
+from lib.utils.name_generator import generate_name
+from lib.world.tile import Tile
+from lib.world.tile_type import TileType
 
 
 class World:
@@ -20,6 +22,7 @@ class World:
         self.tiles = self.generate_world()
         self.entities = []
 
+        self.settlements = []
         # Guardaremos los muertos en un set para búsqueda O(1)
         self.to_remove = set()
         self.entity_grid = defaultdict(list)
@@ -65,8 +68,7 @@ class World:
 
         # 3. Lógica global
         self.detect_population_story()
-        self.detect_settlements()
-        self.detect_conflicts()
+        self.detect_possible_settlements()
 
         # 4. Lógica de asentamientos
         history_settlements = self.history.settlements.values()
@@ -78,27 +80,17 @@ class World:
     def spawn(self, entity: Entity) -> None:
         self.entities.append(entity)
 
-    def detect_settlements(self):
+    def detect_possible_settlements(self):
         clusters = defaultdict(list)
         for e in self.entities:
             if e.settled:
                 clusters[(e.x // 3, e.y // 3)].append(e)
 
         for key, members in clusters.items():
-            num_members = len(members)
-            if num_members < config.SETTLEMENT_MIN_MEMBERS:
-                continue
-
-            if not self.history.has_settlement(key):
-                name = generate_name()
-                self.history.register_settlement(key, name, self.age)
-                s = self.history.settlements[key]
-                event_log.add(f"{name} ha echado raíces {s.glyph}")
-
-            settlement = self.history.settlements[key]
-            settlement.population = num_members
-            for e in members:
-                e.settlement = settlement
+            settlement = self.create_settlement_if_possible(key, members)
+            if settlement and not settlement.faction:
+                self.settlements.append(settlement)
+                self.handle_new_faction(members, settlement)
 
     def collapse_settlement(self, settlement):
         event_log.add(f"{settlement.name} se fragmenta en el caos 💥")
@@ -132,23 +124,42 @@ class World:
             if pop % 500 == 0:
                 event_log.add(f"La población ha alcanzado los {pop} seres...")
 
-    def detect_conflicts(self):
-        settlements = list(self.history.settlements.values())
+    def create_settlement_if_possible(self, key, members) -> Optional[Settlement]:
+        num_members = len(members)
+        if num_members < config.SETTLEMENT_MIN_MEMBERS:
+            return None
 
-        for i, a in enumerate(settlements):
-            for b in settlements[i + 1:]:
-                if self.should_conflict(a, b):
-                    self.history.start_conflict(a, b)
+        if not self.history.has_settlement(key):
+            point: Point = Point(members[0].x, members[0].y)
+            new_settlement = Settlement(key, generate_name(), self.age, point)
+            self.history.register_settlement(key, new_settlement)
 
-    @staticmethod
-    def should_conflict(a: Settlement, b: Settlement):
-        if a == b:
-            return False
+        settlement = self.history.settlements[key]
+        settlement.population = num_members
+        for e in members:
+            e.settlement = settlement
 
-        border = a.is_neighbor(b)
-        if not border:
-            return False
+        return settlement
 
-        tension = (a.ideology_score + b.ideology_score)
+    def handle_new_faction(self, members: list, settlement: Settlement):
+        leader = random.choice(members)
+        faction = self.history.create_faction(leader)
+        settlement.faction = faction
+        faction.settlements.add(settlement)
 
-        return tension > config.CONFLICT_THRESHOLD
+        # asignar tile inicial
+        sx, sy = settlement.key
+        faction.tiles.add((sx, sy))
+        self.tiles[sy][sx].owner = faction
+
+        for e in members:
+            e.faction = faction
+
+    def carve_river(self):
+        x = random.randint(0, self.width - 1)
+        y = 0
+        for _ in range(self.height):
+            self.tiles[y][x].kind = TileType.WATER
+            x += random.choice([-1, 0, 1])
+            x = max(0, min(self.width - 1, x))
+            y += 1

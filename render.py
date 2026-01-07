@@ -1,46 +1,113 @@
-import sys
+import pygame
 
-from events.event_log import event_log
-
-
-def trim(text, width):
-    return text[:width].ljust(width)
+from graphics.prometheus_colors.prometheus_colors import base_color
+from lib.events.event_log import event_log
+from lib.world.tile import Tile
 
 
-def render_world(world):
-    sys.stdout.write("\x1b[H")
+def darker(color, factor=0.6):
+    return tuple(int(c * factor) for c in color)
 
-    panel_width = 52
-    separator = " │ "
 
-    grid = [[world.tiles[y][x].char(world, x, y) for x in range(world.width)] for y in range(world.height)]
+class Renderer:
+    def __init__(self, tile_size):
+        self.tile = tile_size
 
-    for entity in world.entities:
-        grid[entity.y][entity.x] = entity.symbol()
+        pygame.font.init()
+        self.font = pygame.font.SysFont("consolas", 16)
+        self.big_font = pygame.font.SysFont("consolas", 22)
 
-    for settlement in world.history.settlements.values():
-        cx, cy = settlement.key
-        x = cx * 3 + 1
-        y = cy * 3 + 1
+    def draw_world(self, screen, world):
+        tile = self.tile
+        world_px_h = world.height * tile
 
-        if 0 <= x < world.width and 0 <= y < world.height:
-            grid[y][x] = settlement.symbol()
-    events = list(event_log.events)
+        # =========================
+        # MUNDO
+        # =========================
+        for y in range(world.height):
+            for x in range(world.width):
+                t: Tile = world.tiles[y][x]
+                rect = pygame.Rect(x * tile, y * tile, tile, tile)
 
-    for y in range(world.height):
-        map_line = "".join(grid[y])
+                # terreno base
+                screen.fill(base_color(t), rect)
 
-        ui = ""
-        if y == 0:
-            ui = f"Edad: {world.age}"
-        elif y == 2:
-            ui = f"Población: {len(world.entities)} 🧍"
-        elif y == 4:
-            ui = "Eventos"
-        elif 5 <= y < 5 + len(events):
-            ui = events[y - 5]
+                # territorio de facción
+                if t.owner:
+                    color = t.owner.color
 
-        ui = trim(ui, panel_width)
-        print(map_line + separator + ui)
+                    overlay = pygame.Surface((tile, tile), pygame.SRCALPHA)
+                    overlay.fill((color[0], color[1], color[2], 70))
+                    screen.blit(overlay, rect)
 
-    sys.stdout.flush()
+                    if t.is_border(world, x, y):
+                        pygame.draw.rect(screen, darker(color), rect, 1)
+
+        # =========================
+        # ENTIDADES
+        # =========================
+        for e in world.entities:
+            if e.faction:
+                color = e.faction.color
+            else:
+                color = (120, 120, 120)
+
+            cx = e.x * tile + tile // 2
+            cy = e.y * tile + tile // 2
+
+            radius = 2
+            if e.settled:
+                radius = 3
+            if e.is_leader:
+                radius = 5
+
+            pygame.draw.circle(screen, color, (cx, cy), radius)
+            if e.is_leader:
+                pygame.draw.circle(screen, (240, 240, 240), (cx, cy), radius, 1)
+
+        # =========================
+        # UI PANEL
+        # =========================
+        ui_rect = pygame.Rect(0, world_px_h, screen.get_width(), screen.get_height() - world_px_h)
+
+        pygame.draw.rect(screen, (20, 20, 20), ui_rect)
+        pygame.draw.line(screen, (70, 70, 70), (0, world_px_h), (screen.get_width(), world_px_h), 2)
+
+        # ---- Edad y población ----
+        age_text = self.big_font.render(f"Edad: {world.age}", True, (220, 220, 220))
+        pop_text = self.big_font.render(f"Población: {len(world.entities)}", True, (220, 220, 220))
+
+        screen.blit(age_text, (10, world_px_h + 10))
+        screen.blit(pop_text, (10, world_px_h + 42))
+
+        # =========================
+        # TOP FACCIONES
+        # =========================
+        factions = sorted(world.history.factions, key=lambda f: f.population, reverse=True)[:3]
+
+        fx = 300
+        fy = world_px_h + 10
+
+        title = self.big_font.render("Facciones dominantes", True, (200, 200, 200))
+        screen.blit(title, (fx, fy))
+        fy += 32
+
+        for f in factions:
+            pygame.draw.rect(screen, f.color, pygame.Rect(fx, fy + 6, 14, 14))
+
+            txt = self.font.render(f"{f.name} ({f.population})", True, (220, 220, 220))
+            screen.blit(txt, (fx + 22, fy))
+            fy += 22
+
+        # =========================
+        # EVENT LOG
+        # =========================
+        log_x = 10
+        log_y = world_px_h + 80
+        max_lines = 5
+
+        recent = list(event_log.events)[-max_lines:]
+
+        for i, msg in enumerate(recent):
+            text_surface = self.font.render(msg, True, (180, 180, 180))
+            screen.blit(text_surface, (log_x, log_y + i * 18))

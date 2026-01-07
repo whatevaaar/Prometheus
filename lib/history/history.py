@@ -1,8 +1,27 @@
 from collections import defaultdict
 
-from events.event_log import event_log
-from history.conflict import Conflict
-from history.settlement import Settlement
+from lib.events.event_log import event_log
+from lib.faction.faction import Faction
+from lib.history.conflict import Conflict
+from lib.history.identity import Temperament
+
+
+def create_new_faction_log(f: Faction):
+    if f.identity.temperament == Temperament.AGGRESSIVE:
+        adjective = "valiente"
+
+    elif f.identity.temperament == Temperament.SPIRITUAL:
+        adjective = "sagrado"
+
+    elif f.identity.temperament == Temperament.NOMADIC:
+        adjective = "libre"
+
+    elif f.identity.temperament == Temperament.PROUD:
+        adjective = "orgulloso"
+    else:
+        adjective = "misterioso"
+
+    event_log.add(f"Ha nacido el {adjective} pueblo de {f.name} {f.glyph}")
 
 
 class History:
@@ -13,14 +32,18 @@ class History:
         self.settlements = {}
         self.max_population = 0
         self.conflicts = []
+        self.factions = []
 
         self.current_era = {"name": "La Era del Despertar", "start": 0, "traits": set(), }
 
     def tick(self, world):
         # cambios lentos, no cada frame
-        self.detect_era_shift(world)
-        for conflict in self.conflicts:
+        for faction in self.factions[:]:
+            faction.tick(world)
+
+        for conflict in self.conflicts[:]:
             conflict.tick(world)
+        self.detect_era_shift(world)
 
     def add_event(self, text, age):
         self.events.append({"age": age, "text": text, })
@@ -44,10 +67,12 @@ class History:
     def start_new_era(self, traits, age):
         name = self.name_era(traits)
         self.current_era = {"name": name, "start": age, "traits": traits, }
+        event_log.add(f"Empieza {name} en el {age}")
 
     def end_current_era(self, age):
         self.current_era["end"] = age
         self.eras.append(self.current_era)
+        event_log.add(f"Termina {self.current_era.get("name", "")} en el {age}")
 
     @staticmethod
     def name_era(traits):
@@ -62,13 +87,22 @@ class History:
     def has_settlement(self, key):
         return key in self.settlements
 
-    def register_settlement(self, key, name, age):
-        self.settlements[key] = Settlement(key, name, age)
+    def register_settlement(self, key, new_settlement):
+        self.settlements[key] = new_settlement
+        event_log.add(f"Las entidades se asientan en {new_settlement.name}")
 
-    def start_conflict(self, a, b):
-        for c in self.conflicts:
-            if (c.a == a and c.b == b) or (c.a == b and c.b == a):
-                return
-
-        conflict = Conflict(a, b)
+    def start_conflict(self, faction_a, faction_b):
+        conflict = Conflict(faction_a, faction_b)
         self.conflicts.append(conflict)
+
+    def create_faction(self, leader):
+        name = leader.name if hasattr(leader, "name") else "Los Sin Nombre"
+        faction = Faction(name, leader)
+        self.factions.append(faction)
+        event_log.add(f"Nace la facción de {name}")
+        create_new_faction_log(faction)
+        return faction
+
+    def remove_faction(self, faction):
+        if faction in self.factions:
+            self.factions.remove(faction)

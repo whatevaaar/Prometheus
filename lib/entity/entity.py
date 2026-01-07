@@ -1,17 +1,17 @@
 import random
 
 import config
-from naming.name_generator import generate_name
-from world.tile import Tile
-from world.tile_type import TileType
+from lib.utils.name_generator import generate_name
+from lib.world.tile import Tile
+from lib.world.tile_type import TileType
 
 
 class Entity:
     __slots__ = (
         "x", "y", "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown", "social_satiation",
-        "settlement")
+        "settlement", "_faction", "is_leader")
 
-    def __init__(self, x, y, settled=False, settlement=None):
+    def __init__(self, x, y, settled=False, settlement=None, faction=None):
         self.x = x
         self.y = y
 
@@ -27,6 +27,24 @@ class Entity:
 
         self.move_cooldown = 0
         self.social_satiation = 0.0
+
+        self._faction = None
+        self.faction = faction
+        self.is_leader: bool = False
+
+    @property
+    def faction(self):
+        return self._faction
+
+    @faction.setter
+    def faction(self, f):
+        if self._faction:
+            self._faction.population -= 1
+
+        self._faction = f
+
+        if f:
+            f.population += 1
 
     # ──────────────────────────────
     # Representación
@@ -138,6 +156,8 @@ class Entity:
 
     def die(self, world):
         world.to_remove.add(self)
+        if self.faction:
+            self.faction.population -= 1
         old_tile = world.tiles[self.y][self.x]
         old_tile.population = max(0, old_tile.population - 1)
 

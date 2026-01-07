@@ -4,7 +4,7 @@ import config
 
 
 class EventLog:
-    def __init__(self=8):
+    def __init__(self):
         self.events = deque(maxlen=config.MAX_LOGS)
 
     def add(self, text):
