@@ -1,6 +1,6 @@
 import random
 
-from geometry.point.point import Point
+from geometry.point.point import is_in_world
 from lib.entity.entity import Entity
 from lib.events.event_log import event_log
 from lib.history.identity import Temperament
@@ -62,10 +62,8 @@ class Settlement:
                 px = base_x + random.randint(0, 2)
                 py = base_y + random.randint(0, 2)
 
-                p = Point(px, py)
-
                 # bounds duros
-                if not p.is_in_world():
+                if not is_in_world(px, py):
                     continue
 
                 tile = world.tiles[py][px]
@@ -74,7 +72,7 @@ class Settlement:
                 if not tile.can_spawn():
                     continue
 
-                world.spawn(Entity(p, settlement=self, settled=True))
+                world.spawn(Entity(px, py, settlement=self, settled=True))
                 break
 
     def handle_ideology_tick(self):

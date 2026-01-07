@@ -1,49 +1,42 @@
+from random import randint
+
 import config
 
 
-class Point:
-    __slots__ = ("x", "y")
+def is_in_world(x, y) -> bool:
+    return 0 <= x < config.WIDTH and 0 <= y < config.HEIGHT
 
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
 
-    # =========================
-    # MUNDO LÓGICO (tiles)
-    # =========================
-    def is_in_world(self) -> bool:
-        """
-        ¿Está dentro del mundo lógico (coordenadas en tiles)?
-        """
-        return 0 <= self.x < config.WIDTH and 0 <= self.y < config.HEIGHT
+def is_on_screen(x, y) -> bool:
+    return 0 <= x < config.SCREEN_W and 0 <= y < config.SCREEN_H
 
-    # =========================
-    # PANTALLA COMPLETA (px)
-    # =========================
-    def is_on_screen(self) -> bool:
-        """
-        ¿Está dentro de la ventana completa?
-        """
-        return 0 <= self.x < config.SCREEN_W and 0 <= self.y < config.SCREEN_H
 
-    # =========================
-    # VISTA DE MUNDO (sin UI/log)
-    # =========================
-    def is_on_world_view(self) -> bool:
-        """
-        ¿Está dentro del área visible del mundo (excluye panel inferior)?
-        """
-        world_px_h = config.HEIGHT * config.TILE_SIZE
+def is_on_world_view(x, y) -> bool:
+    world_px_h = config.HEIGHT * config.TILE_SIZE
 
-        return 0 <= self.x < config.SCREEN_W and 0 <= self.y < world_px_h
+    return 0 <= x < config.SCREEN_W and 0 <= y < world_px_h
 
-    # =========================
-    # HELPERS ÚTILES
-    # =========================
-    def clamp_to_world(self):
-        """
-        Fuerza el punto a quedar dentro del mundo.
-        Ideal para evitar IndexError.
-        """
-        self.x = max(0, min(self.x, config.WIDTH - 1))
-        self.y = max(0, min(self.y, config.HEIGHT - 1))
+
+def clamp_to_world(x, y):
+    x = max(0, min(x, config.WIDTH - 1))
+    y = max(0, min(y, config.HEIGHT - 1))
+
+
+def get_points_in_radius(x, y, radius: int) -> list:
+    points = []
+
+    for dx, dy in [(-radius, 0), (radius, 0), (0, -radius), (0, radius)]:
+        points.append((x + dx, y + dy))
+
+    return points
+
+
+def get_valid_map_points_in_radius(x, y, radius: int):
+    points_in_radius = get_points_in_radius(x, y, radius)
+    return [(x, y) for x, y in points_in_radius if is_in_world(x, y)]
+
+
+def get_random_point_in_radius(x, y, radius) -> tuple:
+    px = x + randint(0, radius)
+    py = y + randint(0, radius)
+    return px, py

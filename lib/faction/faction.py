@@ -2,13 +2,14 @@ import random
 
 from pygame import Color
 
-from geometry.point.point import Point
+from geometry.point.point import get_valid_map_points_in_radius
 from lib.events.event_log import event_log
 from lib.history.identity import Identity, ValueType, Temperament
 
 
 class Faction:
     def __init__(self, name, leader):
+        self.tile_positions = []
         __slots__ = (
             "name", "leader", "identity", "tiles", "settlements", "population", "alive", "fight_bonus", "glyph",
             "color",)
@@ -53,10 +54,7 @@ class Faction:
         random.shuffle(frontier)
 
         for x, y in frontier[:5]:
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                nx, ny = x + dx, y + dy
-                if not Point(nx, ny).is_in_world():
-                    continue
+            for nx, ny in get_valid_map_points_in_radius(x, y, 2):
 
                 tile = world.tiles[ny][nx]
                 if tile.owner is self or not tile.can_spawn():
@@ -103,3 +101,16 @@ class Faction:
             score += 0.2
 
         return len(self.settlements) + score + self.fight_bonus
+
+    def border_tiles_against(self, other, world):
+        tiles = []
+        for x, y in self.tile_positions:
+            tile = world.tiles[y][x]
+            possible_points = tile.position.get_valid_map_points_in_radius(x, y, 1)
+
+            for position in possible_points:
+                neighbor = world.get_tile_at_position(position)
+                if neighbor.owner == other:
+                    tiles.append(neighbor)
+
+        return tiles

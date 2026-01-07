@@ -26,7 +26,7 @@ class Renderer:
         # =========================
         for y in range(world.height):
             for x in range(world.width):
-                t: Tile = world.tiles[y][x]
+                t= world.tiles[y][x]
                 rect = pygame.Rect(x * tile, y * tile, tile, tile)
 
                 # terreno base
@@ -40,7 +40,7 @@ class Renderer:
                     overlay.fill((color[0], color[1], color[2], 70))
                     screen.blit(overlay, rect)
 
-                    if t.is_border(world, x, y):
+                    if t.is_border(world, x,y):
                         pygame.draw.rect(screen, darker(color), rect, 1)
 
         # =========================
@@ -52,8 +52,8 @@ class Renderer:
             else:
                 color = (120, 120, 120)
 
-            cx = e.position.x * tile + tile // 2
-            cy = e.position.y * tile + tile // 2
+            cx = e.x * tile + tile // 2
+            cy = e.y * tile + tile // 2
 
             radius = 2
             if e.settled:

@@ -1,14 +1,15 @@
 import config
-from geometry.point.point import Point
+
 from lib.tile.tile_type import TileType
 
 
 class Tile:
-    __slots__ = ("kind", "position", "population", "food", "owner",)
+    __slots__ = ("y", "x", "kind", "position", "population", "food", "owner",)
 
-    def __init__(self, kind: TileType, position: Point):
+    def __init__(self, kind: TileType, x, y):
         self.kind = kind
-        self.position = position
+        self.x = x
+        self.y = y
         # población local (opcional, útil para futuro)
         self.population = 0
 

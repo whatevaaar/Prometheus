@@ -26,6 +26,8 @@ def create_new_faction_log(f: Faction):
 
 
 class History:
+    __slots__ = ("events", "eras", "stats", "settlements", "max_population", "conflicts", "factions", "current_era",)
+
     def __init__(self):
         self.events = []  # eventos narrativos importantes
         self.eras = []  # periodos del mundo
