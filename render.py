@@ -52,8 +52,8 @@ class Renderer:
             else:
                 color = (120, 120, 120)
 
-            cx = e.x * tile + tile // 2
-            cy = e.y * tile + tile // 2
+            cx = e.position.x * tile + tile // 2
+            cy = e.position.y * tile + tile // 2
 
             radius = 2
             if e.settled:

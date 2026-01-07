@@ -9,6 +9,10 @@ from lib.history.identity import Identity, ValueType, Temperament
 
 class Faction:
     def __init__(self, name, leader):
+        __slots__ = (
+            "name", "leader", "identity", "tiles", "settlements", "population", "alive", "fight_bonus", "glyph",
+            "color",)
+
         self.name = name
         self.leader = leader  # Entity
         self.identity = Identity()

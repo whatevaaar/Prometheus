@@ -1,8 +1,9 @@
 from collections import defaultdict
 
+import config
 from lib.events.event_log import event_log
 from lib.faction.faction import Faction
-from lib.history.conflict import Conflict
+from lib.history.conflict.conflict import Conflict
 from lib.history.identity import Temperament
 
 
@@ -44,8 +45,11 @@ class History:
         for conflict in self.conflicts[:]:
             conflict.tick(world)
 
-        for settlement in self.settlements.values():
+        for k, settlement in self.settlements.copy().items():
             settlement.tick(world)
+            if settlement.days_empty >= config.SETTLEMENT_MAX_EMPTY_DAYS:
+                settlement.tile.reset()
+                del self.settlements[k]
 
         self.detect_era_shift(world)
 

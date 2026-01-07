@@ -31,7 +31,7 @@ class World:
 
         for _ in range(config.INITIAL_POP):
             x, y = self.random_floor_position()
-            self.entities.append(Entity(x, y))
+            self.entities.append(Entity(Point(x, y)))
 
         event_log.add("El mundo despierta 🌍")
 
@@ -63,7 +63,7 @@ class World:
         # Optimización: Variable local para el acceso rápido
         grid = self.entity_grid
         for e in self.entities:
-            key = (e.x // 3, e.y // 3)
+            key = (e.position.x // 3, e.position.y // 3)
             grid[key].append(e)
 
         # Pre-calculamos la densidad de cada celda una sola vez por tick
@@ -97,7 +97,7 @@ class World:
         clusters = defaultdict(list)
         for e in self.entities:
             if e.settled:
-                clusters[(e.x // 3, e.y // 3)].append(e)
+                clusters[(e.position.x // 3, e.position.y // 3)].append(e)
 
         for key, members in clusters.items():
             settlement = self.create_settlement_if_possible(key, members)
@@ -126,8 +126,8 @@ class World:
             if self.tiles[y][x].kind != TileType.ROCK:
                 return x, y
 
-    def get_settlement_at(self, x, y):
-        return self.history.settlements.get((x // 3, y // 3))
+    def get_settlement_at(self, position: Point) -> Settlement:
+        return self.history.settlements.get((position.x // 3, position.y // 3))
 
     def detect_population_story(self):
         pop = len(self.entities)
@@ -143,7 +143,7 @@ class World:
             return None
 
         if not self.history.has_settlement(key):
-            point: Point = Point(members[0].x, members[0].y)
+            point: Point = members[0].position
             if not point.is_in_world():
                 print(f"QUE PASÖ AQUIIII: {members[0]}")
                 return None

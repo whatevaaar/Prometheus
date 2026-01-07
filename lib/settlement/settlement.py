@@ -18,11 +18,16 @@ RESET = "\033[0m"
 
 
 class Settlement:
+    __slots__ = (
+        "key", "name", "born", "tile", "days_empty", "color", "glyph", "population", "stability", "fight_bonus",
+        "territory", "faction", "birth_timer",)
+
     def __init__(self, key, name, born, tile: Tile):
         self.key = key
         self.name = name
         self.born = born
         self.tile = tile
+        self.days_empty = 0
 
         self.color = random.choice(ANSI_COLORS)
         self.glyph = random.choice(["▲", "▴", "◆", "■", "⬟"])
@@ -69,7 +74,7 @@ class Settlement:
                 if not tile.can_spawn():
                     continue
 
-                world.spawn(Entity(p.x, p.y, settlement=self, settled=True))
+                world.spawn(Entity(p, settlement=self, settled=True))
                 break
 
     def handle_ideology_tick(self):
@@ -96,6 +101,9 @@ class Settlement:
             self.handle_land_pressure()
             self.handle_reproduction(world)
             self.handle_ideology_tick()
+
+            if self.tile.population == 0:
+                self.days_empty += 1
 
     def symbol(self):
         return f"{self.color}{self.glyph}{RESET}"

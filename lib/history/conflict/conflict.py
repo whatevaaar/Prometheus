@@ -1,17 +1,19 @@
 import random
-from enum import Enum
+from enum import Enum, auto
 
 from lib.events.event_log import event_log
 from lib.faction.faction import Faction
 
 
 class ConflictState(Enum):
-    COLD = 0
-    SKIRMISH = 1
-    WAR = 2
+    COLD = auto()
+    SKIRMISH = auto()
+    WAR = auto()
 
 
 class Conflict:
+    __slots__ = ["a", "b", "intensity"]
+
     def __init__(self, a: Faction, b: Faction):
         self.a = a
         self.b = b
@@ -29,3 +31,4 @@ class Conflict:
         if random.random() < chance:
             defender.lose_tile(world)
             event_log.add(f"{attacker.name} arrebata territorio a {defender.name} 🔥")
+

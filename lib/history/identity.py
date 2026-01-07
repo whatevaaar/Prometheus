@@ -27,6 +27,8 @@ class MythType(Enum):
 
 
 class Identity:
+    __slots__ = ("temperament", "value", "myth",)
+
     def __init__(self):
         self.temperament: Temperament = random.choice(tuple(Temperament))
         self.value: ValueType = random.choice(tuple(ValueType))

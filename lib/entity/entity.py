@@ -1,20 +1,18 @@
 import random
 
 import config
+from geometry.point.point import Point
 from lib.tile.tile import Tile
-from lib.tile.tile_type import TileType
 from lib.utils.name_generator import generate_name
 
 
 class Entity:
     __slots__ = (
-        "x", "y", "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown", "social_satiation",
+        "position", "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown", "social_satiation",
         "settlement", "_faction", "is_leader", "food_consumption", "days_without_food")
 
-    def __init__(self, x, y, settled=False, settlement=None, faction=None):
-        self.x = x
-        self.y = y
-
+    def __init__(self, position: Point, settled=False, settlement=None, faction=None):
+        self.position = position
         self.name = generate_name()
 
         self.age = 0
@@ -97,26 +95,26 @@ class Entity:
                 self.move_cooldown -= 1
                 return
 
-        old_tile = world.tiles[self.y][self.x]
+        old_tile = world.tiles[self.position.y][self.position.x]
         old_tile.population -= 1
 
-        self.x, self.y = self.find_closest_best_tile_for_entity(world)
+        self.position = self.find_closest_best_tile_for_entity(world)
 
-        new_tile: Tile = world.tiles[self.y][self.x]
+        new_tile: Tile = world.tiles[self.position.y][self.position.x]
         new_tile.population += 1
 
         self.move_cooldown = random.randint(2, 4)
 
         # saciedad social
-        local_density = len(world.entity_grid.get((self.x // 3, self.y // 3), []))
+        local_density = len(world.entity_grid.get((self.position.x // 3, self.position.y // 3), []))
         if local_density > 3:
             self.social_satiation = min(5.0, self.social_satiation + 0.2)
         else:
             self.social_satiation = max(0.0, self.social_satiation - 0.1)
 
     def use_land(self, world):
-        tile: Tile = world.tiles[self.y][self.x]
-        neighbors = len(world.entity_grid.get((self.x // 3, self.y // 3), []))
+        tile: Tile = world.tiles[self.position.y][self.position.x]
+        neighbors = len(world.entity_grid.get((self.position.x // 3, self.position.y // 3), []))
 
         if tile.food_yield() > 0.15 and neighbors >= 3 and self.age > 15:
             self.settle_timer += 1
@@ -129,6 +127,9 @@ class Entity:
         if tile.food > 0:
             tile.food -= 1
             tile.work()
+            if not self.faction:
+                self.faction = tile.owner
+
         else:
             self.days_without_food += 1
 
@@ -136,48 +137,51 @@ class Entity:
         if self.age < config.MIN_REPRO_AGE or self.energy < config.MIN_REPRO_ENERGY:
             return False
 
-        settlement = world.get_settlement_at(self.x, self.y)
+        settlement = world.get_settlement_at(self.position)
         bonus = 2.0 if settlement else 1.0
         return random.random() < config.REPRO_CHANCE * bonus
 
     def reproduce(self, world):
         self.energy -= config.REPRO_COST
 
-        tile: Tile = world.tiles[self.y][self.x]
+        tile: Tile = world.tiles[self.position.y][self.position.x]
         tile.food += 1
-        nx, ny = self.find_closest_best_tile_for_entity(world=world)
-        world.spawn(Entity(x=nx, y=ny, settled=self.settled))
+        position = self.find_closest_best_tile_for_entity(world=world)
+        world.spawn(Entity(position, settled=self.settled))
 
-        settlement = world.get_settlement_at(self.x, self.y)
+        settlement = world.get_settlement_at(position)
         if settlement:
             settlement.stability += 0.03
 
     def will_die(self) -> bool:
-        return self.energy <= 0 or self.age >= self.max_age
+        return self.energy <= 0 or self.age >= self.max_age or self.days_without_food >= config.MAX_DAY_WITHOUT_FOOD
 
     def die(self, world):
         world.to_remove.add(self)
         if self.faction:
             self.faction.population -= 1
-        old_tile = world.tiles[self.y][self.x]
+        old_tile = world.tiles[self.position.y][self.position.x]
         old_tile.population = max(0, old_tile.population - 1)
 
-    def find_closest_best_tile_for_entity(self, world):
-        best_x, best_y = self.x, self.y
+    def find_closest_best_tile_for_entity(self, world) -> Point:
+        best_position = self.position
         best_score = -999
 
+        possible_positions = []
+
         for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0), (0, 0)):
-            nx, ny = self.x + dx, self.y + dy
-            if not (0 <= nx < world.width and 0 <= ny < world.height):
+            nx, ny = self.position.x + dx, self.position.y + dy
+            point = Point(nx, ny)
+            if not point.is_in_world():
                 continue
 
             potential_tile: Tile = world.tiles[ny][nx]
 
-            if potential_tile.kind == TileType.ROCK:
+            if not potential_tile.can_move():
                 continue
-            if potential_tile.is_fully_populated:
-                continue
-            if potential_tile.kind == TileType.WATER:
+
+            elif potential_tile.is_fully_populated:
+                possible_positions.append(Point)
                 continue
 
             key = (nx // 3, ny // 3)
@@ -188,6 +192,8 @@ class Entity:
 
             if score > best_score:
                 best_score = score
-                best_x, best_y = nx, ny
+                best_position = point
+        if best_position == self.position and possible_positions:
+            return random.choice(possible_positions)
 
-        return best_x, best_y
+        return best_position

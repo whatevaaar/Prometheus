@@ -4,6 +4,8 @@ from lib.tile.tile_type import TileType
 
 
 class Tile:
+    __slots__ = ("kind", "position", "population", "food", "owner",)
+
     def __init__(self, kind: TileType, position: Point):
         self.kind = kind
         self.position = position
@@ -63,3 +65,7 @@ class Tile:
 
     def work(self):
         self.food += config.MAX_TILE_POPULATION - self.population + 1
+
+    def reset(self):
+        self.food = 10
+        self.owner = None
