@@ -181,7 +181,7 @@ class Entity:
                 continue
 
             elif potential_tile.is_fully_populated:
-                possible_positions.append(Point)
+                possible_positions.append(point)
                 continue
 
             key = (nx // 3, ny // 3)
