@@ -1,6 +1,6 @@
 import random
 
-from lib.world.tile_type import TileType
+from lib.tile.tile_type import TileType
 
 TILE_BASE_COLORS = {TileType.FLOOR: (90, 120, 70), TileType.SURFACE: (120, 140, 90), TileType.ROCK: (80, 80, 80),
                     TileType.WATER: (40, 90, 140), }

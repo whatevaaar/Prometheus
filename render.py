@@ -2,7 +2,7 @@ import pygame
 
 from graphics.prometheus_colors.prometheus_colors import base_color
 from lib.events.event_log import event_log
-from lib.world.tile import Tile
+from lib.tile.tile import Tile
 
 
 def darker(color, factor=0.6):

@@ -1,13 +1,16 @@
 import config
-from lib.world.tile_type import TileType
+from geometry.point.point import Point
+from lib.tile.tile_type import TileType
 
 
 class Tile:
-    def __init__(self, kind: TileType):
+    def __init__(self, kind: TileType, position: Point):
         self.kind = kind
-
+        self.position = position
         # población local (opcional, útil para futuro)
         self.population = 0
+
+        self.food = 10
 
         # soberanía política
         # None | Faction
@@ -25,9 +28,6 @@ class Tile:
     @property
     def is_fully_populated(self) -> bool:
         return self.population >= config.MAX_TILE_POPULATION
-
-    def increase_population(self, amount: int):
-        self.population += amount
 
     # ──────────────────────────────
     # Fronteras políticas
@@ -51,3 +51,15 @@ class Tile:
                 return True
 
         return False
+
+    def can_spawn(self) -> bool:
+        return self.kind.habitable
+
+    def can_move(self) -> bool:
+        return self.kind.passable
+
+    def can_settle(self) -> bool:
+        return self.kind.supports_settlement
+
+    def work(self):
+        self.food += config.MAX_TILE_POPULATION - self.population + 1

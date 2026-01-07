@@ -1,15 +1,15 @@
 import random
 
 import config
+from lib.tile.tile import Tile
+from lib.tile.tile_type import TileType
 from lib.utils.name_generator import generate_name
-from lib.world.tile import Tile
-from lib.world.tile_type import TileType
 
 
 class Entity:
     __slots__ = (
         "x", "y", "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown", "social_satiation",
-        "settlement", "_faction", "is_leader")
+        "settlement", "_faction", "is_leader", "food_consumption", "days_without_food")
 
     def __init__(self, x, y, settled=False, settlement=None, faction=None):
         self.x = x
@@ -27,6 +27,9 @@ class Entity:
 
         self.move_cooldown = 0
         self.social_satiation = 0.0
+
+        self.food_consumption = config.DAILY_FOOD_CONSUMPTION
+        self.days_without_food = 0
 
         self._faction = None
         self.faction = faction
@@ -64,16 +67,16 @@ class Entity:
     # Ciclo principal
     # ──────────────────────────────
     def tick(self, world):
-        self.use_land(world)
         self.get_old()
+        self.use_land(world)
         self.move(world)
+
+        if self.will_reproduce(world):
+            self.reproduce(world)
 
         if self.will_die():
             self.die(world)
             return
-
-        if self.will_reproduce(world):
-            self.reproduce(world)
 
     # ──────────────────────────────
     # Envejecimiento
@@ -86,20 +89,21 @@ class Entity:
     # Movimiento (usando grid)
     # ──────────────────────────────
     def move(self, world):
-        if self.settled and random.random() < 0.8:
-            return
+        if not self.days_without_food:
+            if self.settled and random.random() < 0.8:
+                return
 
-        if self.move_cooldown > 0:
-            self.move_cooldown -= 1
-            return
+            if self.move_cooldown > 0:
+                self.move_cooldown -= 1
+                return
 
         old_tile = world.tiles[self.y][self.x]
-        old_tile.population = max(0, old_tile.population - 1)
+        old_tile.population -= 1
 
         self.x, self.y = self.find_closest_best_tile_for_entity(world)
 
         new_tile: Tile = world.tiles[self.y][self.x]
-        new_tile.increase_population(1)
+        new_tile.population += 1
 
         self.move_cooldown = random.randint(2, 4)
 
@@ -110,9 +114,6 @@ class Entity:
         else:
             self.social_satiation = max(0.0, self.social_satiation - 0.1)
 
-    # ──────────────────────────────
-    # Asentamiento
-    # ──────────────────────────────
     def use_land(self, world):
         tile: Tile = world.tiles[self.y][self.x]
         neighbors = len(world.entity_grid.get((self.x // 3, self.y // 3), []))
@@ -125,12 +126,12 @@ class Entity:
         if self.settle_timer > 5:
             self.settled = True
 
-        if random.random() < 0.3:
-            self.energy += tile.food_yield()
+        if tile.food > 0:
+            tile.food -= 1
+            tile.work()
+        else:
+            self.days_without_food += 1
 
-    # ──────────────────────────────
-    # Reproducción
-    # ──────────────────────────────
     def will_reproduce(self, world) -> bool:
         if self.age < config.MIN_REPRO_AGE or self.energy < config.MIN_REPRO_ENERGY:
             return False
@@ -143,7 +144,7 @@ class Entity:
         self.energy -= config.REPRO_COST
 
         tile: Tile = world.tiles[self.y][self.x]
-        tile.increase_population(1)
+        tile.food += 1
         nx, ny = self.find_closest_best_tile_for_entity(world=world)
         world.spawn(Entity(x=nx, y=ny, settled=self.settled))
 
@@ -175,6 +176,8 @@ class Entity:
             if potential_tile.kind == TileType.ROCK:
                 continue
             if potential_tile.is_fully_populated:
+                continue
+            if potential_tile.kind == TileType.WATER:
                 continue
 
             key = (nx // 3, ny // 3)

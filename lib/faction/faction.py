@@ -2,9 +2,9 @@ import random
 
 from pygame import Color
 
+from geometry.point.point import Point
 from lib.events.event_log import event_log
 from lib.history.identity import Identity, ValueType, Temperament
-from lib.utils.grid_utils import in_bounds
 
 
 class Faction:
@@ -51,11 +51,11 @@ class Faction:
         for x, y in frontier[:5]:
             for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 nx, ny = x + dx, y + dy
-                if not in_bounds(nx, ny):
+                if not Point(nx, ny).is_in_world():
                     continue
 
                 tile = world.tiles[ny][nx]
-                if tile.owner is self:
+                if tile.owner is self or not tile.can_spawn():
                     continue
 
                 self.claim_tile(world, nx, ny)

@@ -1,9 +1,10 @@
 import random
 
+from geometry.point.point import Point
 from lib.entity.entity import Entity
 from lib.events.event_log import event_log
 from lib.history.identity import Temperament
-from geometry.point.point import Point
+from lib.tile.tile import Tile
 
 ANSI_COLORS = ["\033[38;5;33m",  # azul
                "\033[38;5;34m",  # verde
@@ -17,18 +18,16 @@ RESET = "\033[0m"
 
 
 class Settlement:
-    def __init__(self, key, name, born, point: Point):
+    def __init__(self, key, name, born, tile: Tile):
         self.key = key
         self.name = name
-        self.point = point
-
         self.born = born
+        self.tile = tile
 
         self.color = random.choice(ANSI_COLORS)
         self.glyph = random.choice(["▲", "▴", "◆", "■", "⬟"])
 
         self.population = 0
-        self.food = 10.0
         self.stability = 1.0
         self.fight_bonus = 0
 
@@ -40,25 +39,38 @@ class Settlement:
         # reproducción
         self.birth_timer = 0.0
 
-    def handle_food(self):
-        self.food += self.population * 0.05
-        self.food -= self.population * 0.03
-
-        if self.food < 0:
-            self.stability -= 0.01
-            event_log.add(f"{self.name} pasa hambruna")
-
     def handle_reproduction(self, world):
         # reproducción colectiva
         self.birth_timer += self.population * 0.002
-        if self.birth_timer >= 1:
-            births = int(self.birth_timer)
-            self.birth_timer -= births
+        if self.birth_timer < 1:
+            return
 
-            for _ in range(births):
-                x = self.key[0] * 3 + random.randint(0, 2)
-                y = self.key[1] * 3 + random.randint(0, 2)
-                world.spawn(Entity(x, y, settlement=self, settled=True))
+        births = int(self.birth_timer)
+        self.birth_timer -= births
+
+        base_x = self.key[0] * 3
+        base_y = self.key[1] * 3
+
+        for _ in range(births):
+            # intentos limitados → evita loops infinitos
+            for _attempt in range(6):
+                px = base_x + random.randint(0, 2)
+                py = base_y + random.randint(0, 2)
+
+                p = Point(px, py)
+
+                # bounds duros
+                if not p.is_in_world():
+                    continue
+
+                tile = world.tiles[py][px]
+
+                # tiles inválidos
+                if not tile.can_spawn():
+                    continue
+
+                world.spawn(Entity(p.x, p.y, settlement=self, settled=True))
+                break
 
     def handle_ideology_tick(self):
         if self.faction.identity.temperament == Temperament.AGGRESSIVE:
@@ -81,7 +93,6 @@ class Settlement:
 
     def tick(self, world):
         if self.faction:
-            self.handle_food()
             self.handle_land_pressure()
             self.handle_reproduction(world)
             self.handle_ideology_tick()

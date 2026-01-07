@@ -8,9 +8,9 @@ from lib.entity.entity import Entity
 from lib.events.event_log import event_log
 from lib.history.history import History
 from lib.settlement.settlement import Settlement
+from lib.tile.tile import Tile
+from lib.tile.tile_type import TileType
 from lib.utils.name_generator import generate_name
-from lib.world.tile import Tile
-from lib.world.tile_type import TileType
 
 
 class World:
@@ -36,8 +36,25 @@ class World:
         event_log.add("El mundo despierta 🌍")
 
     def generate_world(self) -> list:
-        return [[Tile(TileType.ROCK) if random.random() < 0.05 else Tile(TileType.FLOOR) for _ in range(self.width)] for
-                _ in range(self.height)]
+        tiles = []
+        for y in range(self.height):
+            row = []
+            for x in range(self.width):
+                r = random.random()
+                if r < 0.05:
+                    kind = TileType.ROCK
+                else:
+                    kind = TileType.FLOOR
+                row.append(Tile(kind, Point(x, y)))
+            tiles.append(row)
+
+        # =========================
+        # RÍOS
+        # =========================
+        for _ in range(config.RIVERS):
+            self.carve_river(tiles)
+
+        return tiles
 
     def rebuild_entity_grid(self):
         self.entity_grid.clear()
@@ -71,10 +88,6 @@ class World:
         self.detect_possible_settlements()
 
         # 4. Lógica de asentamientos
-        history_settlements = self.history.settlements.values()
-        for settlement in history_settlements:
-            settlement.tick(self)
-
         self.history.tick(self)
 
     def spawn(self, entity: Entity) -> None:
@@ -131,7 +144,10 @@ class World:
 
         if not self.history.has_settlement(key):
             point: Point = Point(members[0].x, members[0].y)
-            new_settlement = Settlement(key, generate_name(), self.age, point)
+            if not point.is_in_world():
+                print(f"QUE PASÖ AQUIIII: {members[0]}")
+                return None
+            new_settlement = Settlement(key, generate_name(), self.age, self.tiles[point.y][point.x])
             self.history.register_settlement(key, new_settlement)
 
         settlement = self.history.settlements[key]
@@ -155,11 +171,27 @@ class World:
         for e in members:
             e.faction = faction
 
-    def carve_river(self):
-        x = random.randint(0, self.width - 1)
-        y = 0
-        for _ in range(self.height):
-            self.tiles[y][x].kind = TileType.WATER
-            x += random.choice([-1, 0, 1])
-            x = max(0, min(self.width - 1, x))
-            y += 1
+    def carve_river(self, tiles):
+        if random.random() < 0.5:
+            x = random.randint(0, self.width - 1)
+            y = 0
+            dx, dy = 0, 1
+        else:
+            x = 0
+            y = random.randint(0, self.height - 1)
+            dx, dy = 1, 0
+
+        length = random.randint(self.width // 2, self.width + self.height)
+
+        for _ in range(length):
+            if not (0 <= x < self.width and 0 <= y < self.height):
+                break
+
+            tiles[y][x].kind = TileType.WATER
+
+            # pequeñas variaciones para que serpentee
+            if random.random() < 0.3:
+                dx, dy = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), ])
+
+            x += dx
+            y += dy

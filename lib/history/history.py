@@ -43,6 +43,10 @@ class History:
 
         for conflict in self.conflicts[:]:
             conflict.tick(world)
+
+        for settlement in self.settlements.values():
+            settlement.tick(world)
+
         self.detect_era_shift(world)
 
     def add_event(self, text, age):
