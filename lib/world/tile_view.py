@@ -23,9 +23,9 @@ class TileView:
 
         for e in self.entities:
             self.entity_anims[e.name] = {"offset_x": random.uniform(-0.1, 0.1), "offset_y": random.uniform(-0.1, 0.1),
-                "speed_x": random.uniform(0.01, 0.05), "speed_y": random.uniform(0.01, 0.05),
-                "accessory": random.choice(["hat", "cape", "flag", "none"]), "blink": random.choice([True, False]),
-                "happiness": 0.6}
+                                         "speed_x": random.uniform(0.01, 0.05), "speed_y": random.uniform(0.01, 0.05),
+                                         "accessory": random.choice(["hat", "cape", "flag", "none"]),
+                                         "blink": random.choice([True, False]), "happiness": 0.6}
 
     def tick(self):
         for e in self.entities:

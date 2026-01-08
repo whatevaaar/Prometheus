@@ -61,22 +61,35 @@ class TileViewRenderer(RendererBase):
 
     # TileViewRenderer.draw_entities()
     def draw_entities(self):
-        tile_px = min(self.w, self.h) * 0.12  # escala para los cuerpos
+        tile_px_w = self.w  # ancho del tile en pantalla
+        tile_px_h = self.h  # alto del tile en pantalla
+        tile_offset_x = 0
+        tile_offset_y = 0
+
         for e in self.tile_view.entities:
             anim = self.tile_view.entity_anims[e.name]
-            draw_entity(self.screen, e, anim, tile_px)  # ahora sí 4 argumentos
+            draw_entity(self.screen, e, anim, tile_px_w, tile_px_h, tile_offset_x, tile_offset_y)
+
 
     def entity_at_pos(self, mouse_x, mouse_y) -> Optional[Entity]:
-        tile_px = min(self.w, self.h) * config.ENTITY_TILE_SCREEN_SCALE
+        """
+        Devuelve la entidad bajo el cursor (clic) usando la misma lógica que draw_entity
+        """
+        tile_px_w = self.w
+        tile_px_h = self.h
+
         for e in self.tile_view.entities:
-
             anim = self.tile_view.entity_anims[e.name]
-            cx, cy = get_entity_screen_pos(e, anim, tile_px)
+            cx, cy = get_entity_screen_pos(e, anim, tile_px_w, tile_px_h)
 
-            radius = int(tile_px * config.ENTITY_CLICK_SCALE / 2)
+            # radio clickable basado en tamaño del cuerpo
+            body_w = tile_px_w * config.ENTITY_SCALE
+            body_h = tile_px_h * config.ENTITY_SCALE
+            radius = int(max(body_w, body_h) * config.ENTITY_CLICK_SCALE / 2)
 
             if (mouse_x - cx) ** 2 + (mouse_y - cy) ** 2 <= radius ** 2:
                 return e
+
         return None
 
     def draw_entity_info(self, e: Entity):

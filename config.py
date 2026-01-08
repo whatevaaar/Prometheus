@@ -66,7 +66,7 @@ SETTLEMENT_MAX_EMPTY_DAYS = 4
 
 # Entity Render
 ENTITY_CENTER = 0.5  # centra la entidad en el tile
-ENTITY_SCALE = 0.6  # porcentaje del tile que ocupa el cuerpo
+ENTITY_SCALE = 0.1  # porcentaje del tile que ocupa el cuerpo
 ENTITY_EYE_OFFSET_X = 4  # desplazamiento horizontal de los ojos
 ENTITY_EYE_OFFSET_Y = 5  # desplazamiento vertical de los ojos
 ENTITY_HAPPINESS = 0.6  # sonrisa
