@@ -2,6 +2,8 @@ from random import randint
 
 import config
 
+OFFSETS_1 = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
 
 def is_in_world(x, y) -> bool:
     return 0 <= x < config.WIDTH and 0 <= y < config.HEIGHT
@@ -25,7 +27,9 @@ def clamp_to_world(x, y):
 def get_points_in_radius(x, y, radius: int) -> list:
     points = []
 
-    for dx, dy in [(-radius, 0), (radius, 0), (0, -radius), (0, radius)]:
+    offset = OFFSETS_1 if (radius == 1) else [(-radius, 0), (radius, 0), (0, -radius), (0, radius)]
+
+    for dx, dy in offset:
         points.append((x + dx, y + dy))
 
     return points
@@ -33,7 +37,7 @@ def get_points_in_radius(x, y, radius: int) -> list:
 
 def get_valid_map_points_in_radius(x, y, radius: int):
     points_in_radius = get_points_in_radius(x, y, radius)
-    return [(x, y) for x, y in points_in_radius if is_in_world(x, y)]
+    return [(px, py) for (px, py) in points_in_radius if is_in_world(px, py)]
 
 
 def get_random_point_in_radius(x, y, radius) -> tuple:

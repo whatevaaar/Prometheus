@@ -1,8 +1,7 @@
 import random
 
-from pygame import Color
-
 from geometry.point.point import get_valid_map_points_in_radius
+from graphics.prometheus_colors.prometheus_colors import get_random_faction_color
 from lib.events.event_log import event_log
 from lib.history.identity import Identity, ValueType, Temperament
 
@@ -27,17 +26,7 @@ class Faction:
         self.fight_bonus = 0
 
         self.glyph = random.choice(["▲", "▴", "◆", "■", "⬟"])
-        self.color = random.choice([Color(255, 255, 255),  # blanco
-                                    Color(0, 0, 0),  # negro
-                                    Color(255, 0, 0),  # rojo
-                                    Color(0, 255, 0),  # verde
-                                    Color(0, 0, 255),  # azul
-                                    Color(255, 255, 0),  # amarillo
-                                    Color(255, 0, 255),  # magenta
-                                    Color(0, 255, 255),  # cyan
-                                    Color(255, 165, 0),  # naranja
-                                    Color(128, 0, 128),  # morado
-                                    ])
+        self.color = get_random_faction_color()
 
     def tick(self, world):
         if not self.tiles:
@@ -50,18 +39,23 @@ class Faction:
         if self.identity.value != ValueType.EXPANSION:
             return
 
-        frontier = list(self.tiles)
+        # tiles contiguos: fronteras de tu facción
+        frontier = [(x, y) for x, y in self.tiles if
+                    any(world.tiles[ny][nx].owner != self for nx, ny in get_valid_map_points_in_radius(x, y, 1))]
+
         random.shuffle(frontier)
 
-        for x, y in frontier[:5]:
-            for nx, ny in get_valid_map_points_in_radius(x, y, 2):
-
+        expanded = 0
+        for x, y in frontier:
+            for nx, ny in get_valid_map_points_in_radius(x, y, 1):  # radius 1, vecinos inmediatos
                 tile = world.tiles[ny][nx]
                 if tile.owner is self or not tile.can_spawn():
                     continue
 
                 self.claim_tile(world, nx, ny)
-                return
+                expanded += 1
+                if expanded >= 5:  # máximo tiles por tick
+                    return
 
     def claim_tile(self, world, x, y):
         tile = world.tiles[y][x]

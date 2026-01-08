@@ -106,7 +106,7 @@ class Entity:
         self.move_cooldown = random.randint(2, 4)
 
         # saciedad social
-        local_density = len(world.entity_grid.get((self.x // 3, self.y // 3), []))
+        local_density = len(world.entity_grid.get(self.get_key(), []))
         if local_density > 3:
             self.social_satiation = min(5.0, self.social_satiation + 0.2)
         else:
@@ -114,9 +114,9 @@ class Entity:
 
     def use_land(self, world):
         tile: Tile = world.tiles[self.y][self.x]
-        neighbors = len(world.entity_grid.get((self.x // 3, self.y // 3), []))
+        neighbors = len(world.entity_grid.get(self.get_key(), []))
 
-        if tile.food_yield() > 0.15 and neighbors >= 3 and self.age > 15:
+        if tile.food_yield() > 0.15 and (neighbors >= 3 or self.age < 20):
             self.settle_timer += 1
         else:
             self.settle_timer = max(0, self.settle_timer - 1)
@@ -149,7 +149,7 @@ class Entity:
         x, y = self.find_closest_best_tile_for_entity(world=world)
         world.spawn(Entity(x, y, settled=self.settled))
 
-        settlement = world.find_settlement_at_position(x,y)
+        settlement = world.find_settlement_at_position(x, y)
         if settlement:
             settlement.stability += 0.03
 
@@ -180,7 +180,7 @@ class Entity:
                 possible_positions.append((nx, ny))
                 continue
 
-            key = (nx // 3, ny // 3)
+            key = (nx // config.CELL_SIZE_X, ny // config.CELL_SIZE_Y)
             density = world.grid_densities.get(key, 0)
             energy = potential_tile.food_yield()
 
@@ -193,3 +193,6 @@ class Entity:
             return random.choice(possible_positions)
 
         return best_position
+
+    def get_key(self):
+        return self.x // config.CELL_SIZE_X, self.y // config.CELL_SIZE_Y
