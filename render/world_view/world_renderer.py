@@ -7,14 +7,18 @@ from render.renderer import RendererBase
 
 
 class WorldRenderer(RendererBase):
-    def draw_world(self, world):
+    def __init__(self, screen: Surface, world):
+        super().__init__(screen)
+        self.world = world
+
+    def draw(self):
         tile = config.TILE_SIZE
-        world_px_h = world.height * tile
+        world_px_h = self.world.height * tile
 
         # ==== Tiles ====
-        for y in range(world.height):
-            for x in range(world.width):
-                t = world.tiles[y][x]
+        for y in range(self.world.height):
+            for x in range(self.world.width):
+                t = self.world.tiles[y][x]
                 rect = Rect(x * tile, y * tile, tile, tile)
                 self.screen.fill(base_color(t), rect)
 
@@ -24,11 +28,11 @@ class WorldRenderer(RendererBase):
                     overlay.fill((color[0], color[1], color[2], 70))
                     self.screen.blit(overlay, rect)
 
-                    if t.is_border(world, x, y):
+                    if t.is_border(self.world, x, y):
                         draw.rect(self.screen, RendererBase.darker(color), rect, 1)
 
         # ==== Entidades ====
-        for e in world.entities:
+        for e in self.world.entities:
             color = e.faction.color if e.faction else (120, 120, 120)
             cx = e.x * tile + tile // 2
             cy = e.y * tile + tile // 2
@@ -48,12 +52,12 @@ class WorldRenderer(RendererBase):
         draw.rect(self.screen, (20, 20, 20), ui_rect)
         draw.line(self.screen, (70, 70, 70), (0, world_px_h), (self.screen.get_width(), world_px_h), 2)
 
-        age_text = self.big_font.render(f"Edad: {world.age}", True, (220, 220, 220))
-        pop_text = self.big_font.render(f"Población: {len(world.entities)}", True, (220, 220, 220))
+        age_text = self.big_font.render(f"Edad: {self.world.age}", True, (220, 220, 220))
+        pop_text = self.big_font.render(f"Población: {len(self.world.entities)}", True, (220, 220, 220))
         self.screen.blit(age_text, (10, world_px_h + 10))
         self.screen.blit(pop_text, (10, world_px_h + 42))
 
-        factions = sorted(world.history.factions, key=lambda f: f.population, reverse=True)[:3]
+        factions = sorted(self.world.history.factions, key=lambda f: f.population, reverse=True)[:3]
         fx, fy = 300, world_px_h + 10
         title = self.big_font.render("Facciones dominantes", True, (200, 200, 200))
         self.screen.blit(title, (fx, fy))

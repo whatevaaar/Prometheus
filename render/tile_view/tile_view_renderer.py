@@ -14,7 +14,7 @@ class TileViewRenderer(RendererBase):
         self.tile_view = tile_view
         self.w, self.h = self.screen.get_size()
 
-    def draw_tile_view(self):
+    def draw(self):
         self.draw_background()
         self.draw_settlement()
         self.draw_entities()
@@ -26,8 +26,8 @@ class TileViewRenderer(RendererBase):
             x = random.randint(0, self.w - 1)
             y = random.randint(0, self.h - 1)
             shade = random.randint(-10, 10)
-            c = (max(0, min(255, base[0] + shade)), max(0, min(255, base[1] + shade)),
-                 max(0, min(255, base[2] + shade)),)
+            c = (
+            max(0, min(255, base[0] + shade)), max(0, min(255, base[1] + shade)), max(0, min(255, base[2] + shade)),)
             self.screen.set_at((x, y), c)
 
     def draw_settlement(self):
