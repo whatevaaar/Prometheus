@@ -1,8 +1,9 @@
+import math
+
 import pygame
 
 from graphics.prometheus_colors.prometheus_colors import base_color
 from lib.events.event_log import event_log
-from lib.tile.tile import Tile
 
 
 def darker(color, factor=0.6):
@@ -26,7 +27,7 @@ class Renderer:
         # =========================
         for y in range(world.height):
             for x in range(world.width):
-                t= world.tiles[y][x]
+                t = world.tiles[y][x]
                 rect = pygame.Rect(x * tile, y * tile, tile, tile)
 
                 # terreno base
@@ -40,7 +41,7 @@ class Renderer:
                     overlay.fill((color[0], color[1], color[2], 70))
                     screen.blit(overlay, rect)
 
-                    if t.is_border(world, x,y):
+                    if t.is_border(world, x, y):
                         pygame.draw.rect(screen, darker(color), rect, 1)
 
         # =========================
@@ -111,3 +112,53 @@ class Renderer:
         for i, msg in enumerate(recent):
             text_surface = self.font.render(msg, True, (180, 180, 180))
             screen.blit(text_surface, (log_x, log_y + i * 18))
+
+    def draw_tile_view(self, screen, tile_view):
+
+        screen_w, screen_h = screen.get_size()
+        # tamaño de cada tile en pantalla
+        tile_w = screen_w / tile_view.width
+        tile_h = screen_h / tile_view.height
+
+        # dibujar tiles
+        for y, row in enumerate(tile_view.tiles):
+            for x, t in enumerate(row):
+                rect = pygame.Rect(x * tile_w, y * tile_h, tile_w, tile_h)
+                screen.fill(base_color(t), rect)
+
+                if t.owner:
+                    color = t.owner.color
+                    overlay = pygame.Surface((tile_w, tile_h), pygame.SRCALPHA)
+                    overlay.fill((*color[:3], 70))
+                    screen.blit(overlay, rect)
+
+        # dibujar entidades con jiggle y detalles
+        t = pygame.time.get_ticks()
+        for e in tile_view.entities:
+            rel_x = e.x - tile_view.x_start
+            rel_y = e.y - tile_view.y_start
+
+            # jiggle animado
+            jiggle_x = math.sin(t / 200 + rel_x) * 0.3
+            jiggle_y = math.cos(t / 200 + rel_y) * 0.3
+
+            cx = (rel_x + jiggle_x) * tile_w + tile_w / 2
+            cy = (rel_y + jiggle_y) * tile_h + tile_h / 2
+
+            # tamaño según rol
+            radius = tile_w * 0.3
+            if e.settled:
+                radius *= 1.5
+            if e.is_leader:
+                radius *= 2
+
+            color = e.faction.color if e.faction else (200, 200, 200)
+            pygame.draw.circle(screen, color, (int(cx), int(cy)), int(radius))
+
+            # detalles de asentamiento
+            if e.settled:
+                tent_rect = pygame.Rect(cx - radius / 2, cy + radius / 2, radius, radius / 2)
+                pygame.draw.rect(screen, (150, 75, 0), tent_rect)
+
+            if e.is_leader:
+                pygame.draw.circle(screen, (255, 255, 255), (int(cx), int(cy)), int(radius), 2)

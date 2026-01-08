@@ -105,3 +105,19 @@ class Settlement:
 
     def symbol(self):
         return f"{self.color}{self.glyph}{RESET}"
+
+    @property
+    def bounds_x_start(self):
+        return min(x for x, y in self.tiles)
+
+    @property
+    def bounds_x_end(self):
+        return max(x for x, y in self.tiles) + 1
+
+    @property
+    def bounds_y_start(self):
+        return min(y for x, y in self.tiles)
+
+    @property
+    def bounds_y_end(self):
+        return max(y for x, y in self.tiles) + 1
