@@ -4,7 +4,7 @@ from typing import Optional
 
 import config
 from geometry.point.point import is_in_world
-from graphics.utils import get_key
+from render.utils import get_key
 from lib.entity.entity import Entity
 from lib.events.event_log import event_log
 from lib.history.history import History

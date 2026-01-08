@@ -3,7 +3,7 @@ import pygame
 import config
 from lib.world.tile_view import TileView
 from lib.world.world import World
-from render import Renderer
+from render.renderer import Renderer
 
 pygame.init()
 
@@ -39,7 +39,8 @@ while running:
             y_end = min(world.height, tile_y + radius + 1)
 
             try:
-                current_tile_view = TileView(world, x_start, y_start, x_end, y_end)
+                current_tile_view = TileView(world, x_start, y_start, x_end, y_end, screen.get_width(),
+                                             screen.get_height())
             except ValueError:
                 current_tile_view = None
 
@@ -48,12 +49,13 @@ while running:
                 current_tile_view.apply_changes_to_world()
                 current_tile_view = None
 
-    if frame % 2 == 0 and not current_tile_view:
+    if frame % 5 == 0 and not current_tile_view:
         world.tick()
     elif current_tile_view:
         current_tile_view.tick()
+        current_tile_view.draw(screen)
 
-    screen.fill((0,0,0))
+    screen.fill((0, 0, 0))
     if current_tile_view:
         renderer.draw_tile_view(screen, current_tile_view)
     else:

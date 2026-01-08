@@ -1,7 +1,7 @@
 import random
 
 from geometry.point.point import get_valid_map_points_in_radius
-from graphics.prometheus_colors.prometheus_colors import get_random_faction_color
+from render.prometheus_colors.prometheus_colors import get_random_faction_color
 from lib.events.event_log import event_log
 from lib.history.identity import Identity, ValueType, Temperament
 
