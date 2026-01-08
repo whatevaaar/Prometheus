@@ -169,7 +169,7 @@ class World:
         # asignar tile inicial
         sx, sy = settlement.key
         faction.tiles.add((sx, sy))
-        self.tiles[sy][sx].owner = faction
+        self.tiles[sy][sx].settle_tile(faction)
 
         for e in members:
             e.faction = faction

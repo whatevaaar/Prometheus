@@ -4,7 +4,7 @@ from lib.tile.tile_type import TileType
 
 
 class Tile:
-    __slots__ = ("y", "x", "kind", "position", "population", "food", "owner",)
+    __slots__ = ("y", "x", "kind", "position", "population", "food", "owner", "settled")
 
     def __init__(self, kind: TileType, x, y):
         self.kind = kind
@@ -12,6 +12,7 @@ class Tile:
         self.y = y
         # población local (opcional, útil para futuro)
         self.population = 0
+        self.settled: bool = False
 
         self.food = 10
 
@@ -70,3 +71,8 @@ class Tile:
     def reset(self):
         self.food = 10
         self.owner = None
+        self.settled = False
+
+    def settle_tile(self, faction):
+        self.settled = True
+        self.owner = faction

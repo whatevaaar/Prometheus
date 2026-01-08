@@ -29,20 +29,11 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
+
             tile_x = int(mouse_x // config.TILE_SIZE)
             tile_y = int(mouse_y // config.TILE_SIZE)
-            radius = 5
 
-            x_start = max(0, tile_x - radius)
-            y_start = max(0, tile_y - radius)
-            x_end = min(world.width, tile_x + radius + 1)
-            y_end = min(world.height, tile_y + radius + 1)
-
-            try:
-                current_tile_view = TileView(world, x_start, y_start, x_end, y_end, screen.get_width(),
-                                             screen.get_height())
-            except ValueError:
-                current_tile_view = None
+            current_tile_view = TileView(world, tile_x, tile_y, screen.get_width(), screen.get_height())
 
         if event.type == pygame.KEYDOWN and current_tile_view:
             if event.key == pygame.K_d:
@@ -53,7 +44,6 @@ while running:
         world.tick()
     elif current_tile_view:
         current_tile_view.tick()
-        current_tile_view.draw(screen)
 
     screen.fill((0, 0, 0))
     if current_tile_view:
