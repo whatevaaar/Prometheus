@@ -7,7 +7,7 @@ from lib.utils.name_generator import generate_name
 
 
 class Entity:
-    __slots__ = ("x", "y", "position", "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown",
+    __slots__ = ("x", "y",  "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown",
                  "social_satiation", "settlement", "_faction", "is_leader", "food_consumption", "days_without_food")
 
     def __init__(self, x, y, settled=False, settlement=None, faction=None):

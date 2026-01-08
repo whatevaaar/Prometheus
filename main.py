@@ -3,6 +3,8 @@ from typing import Optional
 import pygame
 
 import config
+from geometry.point.point import is_in_world
+from lib.entity.entity import Entity
 from lib.world.tile_view import TileView
 from lib.world.world import World
 from render.tile_view.tile_view_renderer import TileViewRenderer
@@ -29,6 +31,7 @@ tile_view_renderer: Optional[TileViewRenderer] = None
 paused = False
 tick_speed = 5  # frames por tick
 frame = 0
+clicked_entity: Optional[Entity] = None
 
 
 # --------------------------
@@ -36,7 +39,7 @@ frame = 0
 # --------------------------
 def handle_input():
     """Maneja teclado y mouse"""
-    global current_tile_view, tile_view_renderer, paused, tick_speed
+    global current_tile_view, tile_view_renderer, paused, tick_speed, clicked_entity
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
@@ -46,8 +49,13 @@ def handle_input():
             mouse_x, mouse_y = pygame.mouse.get_pos()
             tile_x = int(mouse_x // config.TILE_SIZE)
             tile_y = int(mouse_y // config.TILE_SIZE)
-            current_tile_view = TileView(world, tile_x, tile_y, screen.get_width(), screen.get_height())
-            tile_view_renderer = TileViewRenderer(screen, current_tile_view)
+            if current_tile_view:
+                clicked_entity = tile_view_renderer.entity_at_pos(mouse_x, mouse_y)
+
+            elif is_in_world(tile_x, tile_y):
+                current_tile_view = TileView(world, tile_x, tile_y, screen.get_width(), screen.get_height())
+                tile_view_renderer = TileViewRenderer(screen, current_tile_view)
+                clicked_entity = None
 
         # Teclado
         if event.type == pygame.KEYDOWN:
@@ -65,6 +73,7 @@ def handle_input():
                 current_tile_view.apply_changes_to_world()
                 current_tile_view = None
                 tile_view_renderer = None
+                clicked_entity = None
 
     return True
 
@@ -81,10 +90,11 @@ def update_simulation():
 
 def draw():
     """Dibuja todo en pantalla delegando a los renderers"""
+    global clicked_entity
     screen.fill((0, 0, 0))
 
     if current_tile_view:
-        tile_view_renderer.draw()
+        tile_view_renderer.draw(clicked_entity)
     else:
         world_renderer.draw()
 

@@ -58,9 +58,18 @@ CELL_SIZE_Y = 3
 # World
 RIVERS = 2
 
-#ENTITY
+# ENTITY
 DAILY_FOOD_CONSUMPTION = 1
 MAX_DAY_WITHOUT_FOOD = 1
 
-
 SETTLEMENT_MAX_EMPTY_DAYS = 4
+
+# Entity Render
+ENTITY_CENTER = 0.5  # centra la entidad en el tile
+ENTITY_SCALE = 0.6  # porcentaje del tile que ocupa el cuerpo
+ENTITY_EYE_OFFSET_X = 4  # desplazamiento horizontal de los ojos
+ENTITY_EYE_OFFSET_Y = 5  # desplazamiento vertical de los ojos
+ENTITY_HAPPINESS = 0.6  # sonrisa
+ENTITY_CLICK_SCALE = 0.6  # hitbox proporcional al cuerpo
+ENTITY_TILE_SCREEN_SCALE = 0.12  # porcentaje de la ventana usado como "tile_px
+ENTITY_EYE_RADIUS = 2

@@ -44,3 +44,9 @@ def get_random_point_in_radius(x, y, radius) -> tuple:
     px = x + randint(0, radius)
     py = y + randint(0, radius)
     return px, py
+
+
+def get_entity_screen_pos(e, anim, tile_px) -> tuple:
+    cx = int((e.x + config.ENTITY_CENTER + anim["offset_x"]) * tile_px)
+    cy = int((e.y + config.ENTITY_CENTER + anim["offset_y"]) * tile_px)
+    return cx, cy

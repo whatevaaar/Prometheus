@@ -1,5 +1,5 @@
 import pygame
-from pygame import Surface
+from pygame import Surface, font
 
 import config
 
@@ -7,9 +7,9 @@ import config
 class RendererBase:
     def __init__(self, screen: Surface):
         self.screen = screen
-        pygame.font.init()
-        self.font = pygame.font.SysFont("consolas", 16)
-        self.big_font = pygame.font.SysFont("consolas", 22)
+        font.init()
+        self.font = font.SysFont("consolas", 16)
+        self.big_font = font.SysFont("consolas", 22)
 
     @staticmethod
     def darker(color, factor=0.6):

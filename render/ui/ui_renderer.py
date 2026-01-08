@@ -1,11 +1,11 @@
-import pygame
-from pygame import Surface
+from pygame import Surface, font
+
 
 class UIRenderer:
     def __init__(self, screen: Surface):
         self.screen = screen
-        pygame.font.init()
-        self.font = pygame.font.SysFont("consolas", 18)
+        font.init()
+        self.font = font.SysFont("consolas", 18)
 
     def draw(self, paused: bool, tick_speed: int):
         """Dibuja estado de pausa y velocidad en pantalla"""

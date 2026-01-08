@@ -1,20 +1,29 @@
 import pygame
 
+import config
+from geometry.point.point import get_entity_screen_pos
+
 
 def draw_entity(screen, e, anim, tile_px):
     """
-    Dibuja una entidad con estilo en TileView
+    Dibuja una entidad con estilo en TileView.
     anim: diccionario con offsets, accesorios y blink
     """
-    cx = int((e.x + 0.5 + anim["offset_x"]) * tile_px)
-    cy = int((e.y + 0.5 + anim["offset_y"]) * tile_px)
+    cx, cy = get_entity_screen_pos(e, anim, tile_px)
 
     # cuerpo
-    body_w = tile_px * 0.6
-    body_h = tile_px * 0.6
+    body_w = tile_px * config.ENTITY_SCALE
+    body_h = tile_px * config.ENTITY_SCALE
     body_rect = pygame.Rect(cx - body_w / 2, cy - body_h / 2, body_w, body_h)
     color = e.faction.color if e.faction else (180, 180, 180)
     pygame.draw.ellipse(screen, color, body_rect)
+
+    # ojos cute, proporcionales al cuerpo
+    eye_radius = int(body_w * 0.08)
+    eye_offset_x = int(body_w * 0.18)
+    eye_offset_y = int(body_h * 0.18)
+    pygame.draw.circle(screen, (0, 0, 0), (cx - eye_offset_x, cy - eye_offset_y), eye_radius)
+    pygame.draw.circle(screen, (0, 0, 0), (cx + eye_offset_x, cy - eye_offset_y), eye_radius)
 
     # accesorios
     if anim["accessory"] == "hat":
@@ -27,19 +36,14 @@ def draw_entity(screen, e, anim, tile_px):
         pygame.draw.line(screen, (255, 255, 255), (cx, cy - body_h / 2), (cx, cy - body_h), 2)
         pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(cx, cy - body_h, body_w / 4, body_h / 4))
 
-    # ojos grandes y carismáticos
-    eye_radius = 2
-    pygame.draw.circle(screen, (0, 0, 0), (cx - 4, cy - 5), eye_radius)
-    pygame.draw.circle(screen, (0, 0, 0), (cx + 4, cy - 5), eye_radius)
-
-    # boca feliz según "nivel de felicidad" estático por ahora
-    happiness = 0.6  # 0 a 1
-    mouth_y = cy + 4
+    # boca feliz
+    happiness = anim.get("happiness", 0.6)  # 0 a 1
     mouth_w = int(body_w * 0.5)
-    mouth_h = int(2 * happiness)
+    mouth_h = int(body_h * 0.15 * happiness)
+    mouth_y = cy + int(body_h * 0.2)
     pygame.draw.arc(screen, (0, 0, 0), (cx - mouth_w // 2, mouth_y, mouth_w, mouth_h), 3.14, 0, 1)
 
     # nombre
     font = pygame.font.SysFont("consolas", 12)
     name_surf = font.render(e.name, True, (255, 255, 255))
-    screen.blit(name_surf, (cx - name_surf.get_width() // 2, cy - body_h / 2 - 12))
+    screen.blit(name_surf, (cx - name_surf.get_width() // 2, cy - body_h / 2 - 14))
