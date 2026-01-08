@@ -4,7 +4,6 @@ from typing import Optional
 
 import config
 from geometry.point.point import is_in_world
-from render.utils import get_key
 from lib.entity.entity import Entity
 from lib.events.event_log import event_log
 from lib.history.history import History
@@ -12,6 +11,7 @@ from lib.settlement.settlement import Settlement
 from lib.tile.tile import Tile
 from lib.tile.tile_type import TileType
 from lib.utils.name_generator import generate_name
+from render.renderer import RendererBase
 
 
 class World:
@@ -102,7 +102,7 @@ class World:
         clusters = defaultdict(list)
         for e in self.entities:
             if e.settled:
-                clusters[get_key(e.x,e.y)].append(e)
+                clusters[RendererBase.get_key(e.x,e.y)].append(e)
 
         for key, members in clusters.items():
             settlement = self.create_settlement_if_possible(key, members)
