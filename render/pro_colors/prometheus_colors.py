@@ -5,13 +5,13 @@ from lib.tile.tile_type import TileType
 TILE_BASE_COLORS = {TileType.FLOOR: (90, 120, 70), TileType.SURFACE: (120, 140, 90), TileType.ROCK: (80, 80, 80),
                     TileType.WATER: (40, 90, 140), }
 
-FACTION_PALETTE = [(180, 80, 80),  # rojo viejo
-                   (80, 140, 90),  # verde apagado
-                   (90, 110, 160),  # azul gris
-                   (170, 150, 90),  # ocre
-                   (140, 90, 140),  # púrpura viejo
-                   (90, 130, 130),  # teal apagado
-                   ]
+FACTION_PALETTE = [(110, 85, 65),  # marrón profundo
+    (95, 95, 95),  # gris medio
+    (130, 115, 90),  # ocre gris
+    (125, 90, 125),  # púrpura seco
+    (150, 140, 130),  # hueso
+    (105, 90, 75),  # tierra húmeda
+]
 
 
 def get_random_faction_color() -> tuple:

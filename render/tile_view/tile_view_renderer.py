@@ -98,7 +98,7 @@ class TileViewRenderer(RendererBase):
         pygame.draw.rect(self.screen, (30, 30, 30), rect)
         pygame.draw.rect(self.screen, (200, 200, 200), rect, 1)
         lines = [f"Nombre: {e.name}", f"Energía: {e.energy:.1f}", f"Días sin comida: {e.days_without_food}",
-                 f"Asentado: {e.settled}, Edad: {e.days_without_food}"]
+                 f"Asentado: {e.settled}", f"Edad: {e.age}", f"Mood: {e.mood}"]
         for i, line in enumerate(lines):
             surf = self.font.render(line, True, (220, 220, 220))
             self.screen.blit(surf, (rect.x + 6, rect.y + 6 + i * 16))

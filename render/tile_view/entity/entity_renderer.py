@@ -9,6 +9,9 @@ def draw_entity(screen, e, anim, tile_px_w, tile_px_h, tile_offset_x=0, tile_off
     color = e.faction.color if e.faction else (180, 180, 180)
     body_w = tile_px_w * config.ENTITY_SCALE
     body_h = tile_px_h * config.ENTITY_SCALE
+
+    shadow_rect = pygame.Rect(cx - body_w / 2, cy + body_h / 2 * 0.8, body_w, body_h * 0.3)
+    pygame.draw.ellipse(screen, (0, 0, 0, 50), shadow_rect)  # alpha si usas Surface con SRCALPHA
     if anim["accessory"] == "cape":
         cape_color = (max(0, color[0] - 40), max(0, color[1] - 40), max(0, color[2] - 40),)
 
@@ -37,9 +40,6 @@ def draw_entity(screen, e, anim, tile_px_w, tile_px_h, tile_offset_x=0, tile_off
     arm_length = body_w * 0.25
     pygame.draw.line(screen, color, (cx - body_w / 2, cy), (cx - body_w / 2 - arm_length, cy + arm_length / 2), 3)
     pygame.draw.line(screen, color, (cx + body_w / 2, cy), (cx + body_w / 2 + arm_length, cy + arm_length / 2), 3)
-
-    shadow_rect = pygame.Rect(cx - body_w / 2, cy + body_h / 2 * 0.8, body_w, body_h * 0.3)
-    pygame.draw.ellipse(screen, (0, 0, 0, 50), shadow_rect)  # alpha si usas Surface con SRCALPHA
 
     # accesorios
     if anim["accessory"] == "hat":

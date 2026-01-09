@@ -1,8 +1,4 @@
-import random
 from enum import Enum, auto
-
-from lib.events.event_log import event_log
-from lib.faction.faction import Faction
 
 
 class ConflictState(Enum):
@@ -11,33 +7,67 @@ class ConflictState(Enum):
     WAR = auto()
 
 
+from lib.events.event_log import event_log
+from lib.faction.faction import Faction
+
+
 class Conflict:
-    __slots__ = ["a", "b", "intensity"]
+    __slots__ = ("a", "b", "progress")
 
     def __init__(self, a: Faction, b: Faction):
         self.a = a
         self.b = b
-        self.intensity = 0.1
+        self.progress = 0.0  # progreso global narrativo (opcional)
 
     def tick(self, world):
-        self.intensity += 0.01
+        """
+        Cada tick:
+        - se evalúan tiles frontera entre A y B
+        - cada tile progresa hacia uno de los dos lados
+        """
 
-        diff = self.a.war_score - self.b.war_score
-        attacker = self.a if diff > 0 else self.b
-        defender = self.b if diff > 0 else self.a
+        # diferencia de fuerza (determinista)
+        score_a = self.a.war_score
+        score_b = self.b.war_score
 
-        chance = min(0.1 + abs(diff) * 0.03, 0.5)
+        if score_a == score_b:
+            return  # estancamiento real, no random
 
-        if random.random() < chance:
-            defender.lose_tile(world)
-            event_log.add(f"{attacker.name} arrebata territorio a {defender.name} 🔥")
+        winner = self.a if score_a > score_b else self.b
+        loser = self.b if winner is self.a else self.a
 
-    def capture(self, tile, winner, loser):
+        pressure = abs(score_a - score_b)
+        delta = 0.05 * min(pressure, 5)  # clamp para no explotar el mapa
+
+        for tile in world.border_tiles():
+            if tile.owner not in (self.a, self.b):
+                continue
+
+            neighbor_owner = world.get_neighbor_owner(tile)
+            if neighbor_owner not in (self.a, self.b):
+                continue
+
+            # marcamos la tile como en conflicto
+            tile.conflict = self
+            tile.conflict_progress = getattr(tile, "conflict_progress", 0.0)
+
+            # avanzar o retroceder progreso
+            if tile.owner == winner:
+                tile.conflict_progress += delta
+            else:
+                tile.conflict_progress -= delta
+
+            # resolución
+            if tile.conflict_progress >= 1.0:
+                self.capture(tile, winner, loser)
+
+            elif tile.conflict_progress <= -1.0:
+                self.capture(tile, loser, winner)
+
+    @staticmethod
+    def capture(tile, winner, loser):
         tile.owner = winner
         tile.conflict = None
         tile.conflict_progress = 0.0
 
-        winner.tiles += 1
-        loser.tiles -= 1
-
-        event_log.add(f"{winner.name} toma control de un territorio de {loser.name} ⚔️")
+        event_log.add(f"{winner.name} toma territorio a {loser.name} ⚔️")

@@ -46,6 +46,9 @@ def handle_input():
 
         # Click para seleccionar TileView
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 3 and not current_tile_view:
+                world_renderer.handle_event(event)
+                continue
             mouse_x, mouse_y = pygame.mouse.get_pos()
             tile_x = int(mouse_x // config.TILE_SIZE)
             tile_y = int(mouse_y // config.TILE_SIZE)
