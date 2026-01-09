@@ -7,13 +7,15 @@ from lib.utils.name_generator import generate_name
 
 
 class Entity:
-    __slots__ = ("x", "y",  "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown",
-                 "social_satiation", "settlement", "_faction", "is_leader", "food_consumption", "days_without_food")
+    __slots__ = (
+        "x", "y", "name", "age", "energy", "max_age", "settled", "settle_timer", "move_cooldown", "social_satiation",
+        "settlement", "_faction", "is_leader", "food_consumption", "days_without_food", "mood")
 
     def __init__(self, x, y, settled=False, settlement=None, faction=None):
         self.x = x
         self.y = y
         self.name = generate_name()
+        self.mood: str = "calm"
 
         self.age = 0
         self.energy = random.randint(config.MIN_ENERGY, config.MAX_ENERGY)
@@ -32,6 +34,27 @@ class Entity:
         self._faction = None
         self.faction = faction
         self.is_leader: bool = False
+
+    def update_mood(self, world):
+        tile = world.tiles[self.y][self.x]
+
+        if self.days_without_food >= 2:
+            self.mood = "hungry"
+            return
+
+        if tile.is_border(world, self.x, self.y):
+            self.mood = "afraid"
+            return
+
+        if self.energy < config.MIN_REPRO_ENERGY * 0.8:
+            self.mood = "calm"
+            return
+
+        if self.settled and self.energy > config.MIN_REPRO_ENERGY * 1.5:
+            self.mood = "hopeful"
+            return
+
+        self.mood = "calm"
 
     @property
     def faction(self):
@@ -88,7 +111,7 @@ class Entity:
     # ──────────────────────────────
     def move(self, world):
         if not self.days_without_food:
-            if self.settled and random.random() < 0.8:
+            if self.mood == "calm" and self.settled and random.random() < 0.8:
                 return
 
             if self.move_cooldown > 0:
@@ -138,7 +161,7 @@ class Entity:
             return False
 
         settlement = world.find_settlement_at_position(self.x, self.y)
-        bonus = 2.0 if settlement else 1.0
+        bonus = 2.0 if settlement else 1.0 + (1 if self.mood == "hopeful" else 0)
         return random.random() < config.REPRO_CHANCE * bonus
 
     def reproduce(self, world):

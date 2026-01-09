@@ -5,7 +5,7 @@ import random
 from typing import Optional
 
 import pygame
-from pygame import draw, Surface, Rect
+from pygame import draw, Surface
 
 import config
 from geometry.point.point import get_entity_screen_pos
@@ -70,7 +70,6 @@ class TileViewRenderer(RendererBase):
             anim = self.tile_view.entity_anims[e.name]
             draw_entity(self.screen, e, anim, tile_px_w, tile_px_h, tile_offset_x, tile_offset_y)
 
-
     def entity_at_pos(self, mouse_x, mouse_y) -> Optional[Entity]:
         """
         Devuelve la entidad bajo el cursor (clic) usando la misma lógica que draw_entity
@@ -93,12 +92,13 @@ class TileViewRenderer(RendererBase):
         return None
 
     def draw_entity_info(self, e: Entity):
+        cx, cy = get_entity_screen_pos(e, self.tile_view.entity_anims[e.name], self.w, self.h)
         rect_w, rect_h = 150, 70
-        rect = Rect(10, 10, rect_w, rect_h)
-        draw.rect(self.screen, (30, 30, 30), rect)
-        draw.rect(self.screen, (200, 200, 200), rect, 1)
+        rect = pygame.Rect(cx + 20, cy - rect_h - 10, rect_w, rect_h)
+        pygame.draw.rect(self.screen, (30, 30, 30), rect)
+        pygame.draw.rect(self.screen, (200, 200, 200), rect, 1)
         lines = [f"Nombre: {e.name}", f"Energía: {e.energy:.1f}", f"Días sin comida: {e.days_without_food}",
-                 f"Asentado: {e.settled}"]
+                 f"Asentado: {e.settled}, Edad: {e.days_without_food}"]
         for i, line in enumerate(lines):
             surf = self.font.render(line, True, (220, 220, 220))
             self.screen.blit(surf, (rect.x + 6, rect.y + 6 + i * 16))

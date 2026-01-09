@@ -101,10 +101,6 @@ class History:
         self.settlements[key] = new_settlement
         event_log.add(f"Las entidades se asientan en {new_settlement.name}")
 
-    def start_conflict(self, faction_a, faction_b):
-        conflict = Conflict(faction_a, faction_b)
-        self.conflicts.append(conflict)
-
     def create_faction(self, leader):
         name = leader.name if hasattr(leader, "name") else "Los Sin Nombre"
         faction = Faction(name, leader)
@@ -116,3 +112,13 @@ class History:
     def remove_faction(self, faction):
         if faction in self.factions:
             self.factions.remove(faction)
+
+    def start_conflict(self, faction_a, faction_b):
+        for c in self.conflicts:
+            if {c.a, c.b} == {faction_a, faction_b}:
+                return c  # ya existe
+
+        conflict = Conflict(faction_a, faction_b)
+        self.conflicts.append(conflict)
+        event_log.add(f"Estalla conflicto entre {faction_a.name} y {faction_b.name}")
+        return conflict

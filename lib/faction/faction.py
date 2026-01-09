@@ -1,9 +1,9 @@
 import random
 
 from geometry.point.point import get_valid_map_points_in_radius
-from render.pro_colors.prometheus_colors import get_random_faction_color
 from lib.events.event_log import event_log
 from lib.history.identity import Identity, ValueType, Temperament
+from render.pro_colors.prometheus_colors import get_random_faction_color
 
 
 class Faction:
@@ -95,6 +95,14 @@ class Faction:
             score += 0.2
 
         return len(self.settlements) + score + self.fight_bonus
+
+    def compute_power(self, tile, world):
+        pop_factor = self.population
+        war_factor = self.war_score
+
+        border_bonus = 1.2 if tile.is_border(world, tile.x, tile.y) else 1.0
+
+        return pop_factor * war_factor * border_bonus
 
     def border_tiles_against(self, other, world):
         tiles = []

@@ -15,8 +15,9 @@ from render.renderer import RendererBase
 
 
 class World:
-    __slots__ = ("width", "height", "age", "history", "tiles", "entities", "floor_tiles", "settlements", "to_remove",
-                 "entity_grid", "grid_densities",)
+    __slots__ = (
+    "width", "height", "age", "history", "tiles", "entities", "floor_tiles", "settlements", "to_remove", "entity_grid",
+    "grid_densities",)
 
     def __init__(self, width, height):
         self.width = width
@@ -102,7 +103,7 @@ class World:
         clusters = defaultdict(list)
         for e in self.entities:
             if e.settled:
-                clusters[RendererBase.get_key(e.x,e.y)].append(e)
+                clusters[RendererBase.get_key(e.x, e.y)].append(e)
 
         for key, members in clusters.items():
             settlement = self.create_settlement_if_possible(key, members)
@@ -175,7 +176,7 @@ class World:
             e.faction = faction
 
     def carve_river(self, tiles):
-        if random.random() < .05:
+        if random.random() < .15:
             x = random.randint(-1, self.width - 1)
             y = -1
             dx, dy = -1, 1
@@ -202,3 +203,37 @@ class World:
     def find_settlement_at_position(self, x: int, y: int) -> Optional[Settlement]:
         key = (x // 2, y // 3)
         return self.history.settlements.get(key)
+
+    def detect_conflicts(world):
+        for tile in world.border_tiles():
+            a = tile.owner
+            b = world.get_neighbor_owner(tile)
+
+            if a and b and a != b:
+                conflict = world.history.start_conflict(a, b)
+                tile.conflict = conflict
+
+    def border_tiles(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                tile = self.tiles[y][x]
+                if not tile.owner:
+                    continue
+
+                if tile.is_border(self, x, y):
+                    yield tile
+
+    def get_neighbor_owner(self, tile):
+        x, y = tile.x, tile.y
+
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx, ny = x + dx, y + dy
+
+            if not (0 <= nx < self.width and 0 <= ny < self.height):
+                continue
+
+            neighbor = self.tiles[ny][nx]
+            if neighbor.owner and neighbor.owner != tile.owner:
+                return neighbor.owner
+
+        return None

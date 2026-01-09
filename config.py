@@ -72,4 +72,4 @@ ENTITY_EYE_OFFSET_Y = 5  # desplazamiento vertical de los ojos
 ENTITY_HAPPINESS = 0.6  # sonrisa
 ENTITY_CLICK_SCALE = 0.6  # hitbox proporcional al cuerpo
 ENTITY_TILE_SCREEN_SCALE = 0.12  # porcentaje de la ventana usado como "tile_px
-ENTITY_EYE_RADIUS = 2
+ENTITY_EYE_RADIUS = 4

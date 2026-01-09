@@ -32,3 +32,12 @@ class Conflict:
             defender.lose_tile(world)
             event_log.add(f"{attacker.name} arrebata territorio a {defender.name} 🔥")
 
+    def capture(self, tile, winner, loser):
+        tile.owner = winner
+        tile.conflict = None
+        tile.conflict_progress = 0.0
+
+        winner.tiles += 1
+        loser.tiles -= 1
+
+        event_log.add(f"{winner.name} toma control de un territorio de {loser.name} ⚔️")
